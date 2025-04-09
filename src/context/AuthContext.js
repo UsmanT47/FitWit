@@ -1,171 +1,160 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../constants/config';
+
+// Import auth API
 import { localAuthApi } from '../api/authApi';
 
-// Create the auth context
-const AuthContext = createContext({
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: () => {},
-  register: () => {},
-  logout: () => {},
-  updateUser: () => {},
-});
+// Import constants
+import { STORAGE_KEYS } from '../constants/config';
 
-// Auth provider component
+// Create auth context
+const AuthContext = createContext();
+
+/**
+ * Auth provider component
+ * Handles user authentication state and persistence
+ */
 export const AuthProvider = ({ children }) => {
+  // Auth state
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Load auth state from storage on mount
+  // Load user data from storage on mount
   useEffect(() => {
-    const loadAuthState = async () => {
+    const loadUser = async () => {
       try {
-        setIsLoading(true);
+        // Load user data and token from storage
+        const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER);
+        const authToken = await AsyncStorage.getItem(STORAGE_KEYS.TOKEN);
         
-        // Load token from storage
-        const savedToken = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-        
-        if (savedToken) {
-          setToken(savedToken);
-          
-          // Load user data from storage
-          const savedUserData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-          
-          if (savedUserData) {
-            setUser(JSON.parse(savedUserData));
-          } else {
-            // If we have a token but no user data, clear token (inconsistent state)
-            await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-            setToken(null);
-          }
+        if (userData && authToken) {
+          setUser(JSON.parse(userData));
+          setToken(authToken);
         }
       } catch (error) {
-        console.error('Error loading auth state:', error);
-        // If there's an error, clear auth state to be safe
-        await AsyncStorage.multiRemove([
-          STORAGE_KEYS.AUTH_TOKEN,
-          STORAGE_KEYS.USER_DATA,
-        ]);
-        setToken(null);
-        setUser(null);
+        console.error('Error loading auth data:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
     
-    loadAuthState();
+    loadUser();
   }, []);
   
-  // Login function
-  const login = async (credentials) => {
-    try {
-      setIsLoading(true);
-      
-      // Call login API
-      const response = await localAuthApi.login(credentials);
-      
-      // Save token and user data
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
-      
-      // Update state
-      setToken(response.token);
-      setUser(response.user);
-      
-      return response;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Register function
+  /**
+   * Register a new user
+   * @param {Object} userData User registration data
+   */
   const register = async (userData) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       
-      // Call register API
+      // Call registration API
+      // In a real app, this would make an API request
+      // For now, we'll use a local implementation
       const response = await localAuthApi.register(userData);
       
-      // Save token and user data
-      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
+      // Save user data and token to storage
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+      await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
       
       // Update state
-      setToken(response.token);
       setUser(response.user);
+      setToken(response.token);
       
       return response;
     } catch (error) {
-      console.error('Registration error:', error);
+      setError(error.message || 'Registration failed');
       throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
-  // Logout function
-  const logout = async () => {
+  /**
+   * Log in an existing user
+   * @param {Object} credentials User credentials (username, password)
+   */
+  const login = async (credentials) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       
-      // Call logout API if we have a token
-      if (token) {
-        try {
-          await localAuthApi.logout();
-        } catch (error) {
-          console.error('Logout API error:', error);
-          // Continue with local logout even if API call fails
-        }
-      }
+      // Call login API
+      // In a real app, this would make an API request
+      // For now, we'll use a local implementation
+      const response = await localAuthApi.login(credentials);
       
-      // Clear auth state from storage
-      await AsyncStorage.multiRemove([
-        STORAGE_KEYS.AUTH_TOKEN,
-        STORAGE_KEYS.USER_DATA,
-      ]);
-      
-      // Clear state
-      setToken(null);
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Update user data
-  const updateUser = async (updatedUserData) => {
-    try {
-      // In a real app, you would call an API to update the user data
-      // For now, we'll just update local storage
-      
-      // Get current user data
-      const currentUserData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
-      const currentUser = currentUserData ? JSON.parse(currentUserData) : {};
-      
-      // Merge with updated data
-      const newUserData = { ...currentUser, ...updatedUserData };
-      
-      // Save to storage
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUserData));
+      // Save user data and token to storage
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+      await AsyncStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
       
       // Update state
-      setUser(newUserData);
+      setUser(response.user);
+      setToken(response.token);
       
-      return newUserData;
+      return response;
+    } catch (error) {
+      setError(error.message || 'Login failed');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  /**
+   * Log out the current user
+   */
+  const logout = async () => {
+    try {
+      setLoading(true);
+      
+      // Call logout API
+      // In a real app, this would make an API request
+      // For now, we'll use a local implementation
+      await localAuthApi.logout();
+      
+      // Clear auth storage
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER);
+      await AsyncStorage.removeItem(STORAGE_KEYS.TOKEN);
+      
+      // Reset state
+      setUser(null);
+      setToken(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  /**
+   * Update user profile data
+   * @param {Object} userData Updated user data
+   */
+  const updateUser = async (userData) => {
+    try {
+      setLoading(true);
+      
+      // In a real app, this would make an API request
+      // For now, we'll just update local storage
+      const updatedUser = { ...user, ...userData };
+      
+      // Save updated user data to storage
+      await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(updatedUser));
+      
+      // Update state
+      setUser(updatedUser);
+      
+      return updatedUser;
     } catch (error) {
       console.error('Update user error:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -173,10 +162,11 @@ export const AuthProvider = ({ children }) => {
   const contextValue = {
     user,
     token,
-    isAuthenticated: !!token,
-    isLoading,
-    login,
+    loading,
+    error,
+    isAuthenticated: !!user,
     register,
+    login,
     logout,
     updateUser,
   };
@@ -188,7 +178,16 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the auth context
-export const useAuth = () => useContext(AuthContext);
-
-export default AuthContext;
+/**
+ * Hook for using the auth context
+ * @returns {Object} Auth context value
+ */
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
+  return context;
+};

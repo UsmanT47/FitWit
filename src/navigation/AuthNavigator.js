@@ -1,56 +1,31 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme } from '../context/ThemeContext';
 
 // Import auth screens
+import OnboardingScreen from '../screens/auth/OnboardingScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
-import OnboardingScreen from '../screens/auth/OnboardingScreen';
 
-// Create auth stack
 const Stack = createNativeStackNavigator();
 
+/**
+ * Authentication stack navigator
+ * Handles all authentication-related screens (login, register, forgot password)
+ */
 const AuthNavigator = () => {
-  const { theme } = useTheme();
-  
-  // Default screen options for auth stack
-  const screenOptions = {
-    headerStyle: {
-      backgroundColor: theme.background.primary,
-    },
-    headerTintColor: theme.text.primary,
-    headerShadowVisible: false,
-    contentStyle: {
-      backgroundColor: theme.background.primary,
-    },
-  };
-  
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       initialRouteName="Onboarding"
-      screenOptions={screenOptions}
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
     >
-      <Stack.Screen 
-        name="Onboarding" 
-        component={OnboardingScreen} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="Login" 
-        component={LoginScreen} 
-        options={{ title: 'Sign In' }}
-      />
-      <Stack.Screen 
-        name="Register" 
-        component={RegisterScreen} 
-        options={{ title: 'Create Account' }}
-      />
-      <Stack.Screen 
-        name="ForgotPassword" 
-        component={ForgotPasswordScreen} 
-        options={{ title: 'Reset Password' }}
-      />
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     </Stack.Navigator>
   );
 };

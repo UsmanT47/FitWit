@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitWit App - Build Instructions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #4285F4;
+        }
+        .container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Monaco, monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .step {
+            margin-bottom: 30px;
+        }
+        .note {
+            background-color: #fef9e7;
+            padding: 10px;
+            border-left: 4px solid #f1c40f;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>FitWit App - Build Instructions for APK</h1>
+    
+    <div class="container">
+        <h2>Project Overview</h2>
+        <p>FitWit is a comprehensive health and fitness tracking application built with React Native using Expo.</p>
+        <p>This guide will help you build the Android APK file for installation on Android devices.</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 1: Prerequisites</h3>
+        <p>Before you can build the APK, you need to have the following installed:</p>
+        <ul>
+            <li>Node.js (v16 or higher)</li>
+            <li>npm or yarn</li>
+            <li>Expo CLI (<code>npm install -g eas-cli</code>)</li>
+            <li>An Expo account (create one at <a href="https://expo.dev/signup">https://expo.dev/signup</a>)</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Clone the Repository</h3>
+        <p>Clone the repository to your local machine:</p>
+        <pre><code>git clone [repository-url]
+cd fitwit</code></pre>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Install Dependencies</h3>
+        <p>Install all required dependencies:</p>
+        <pre><code>npm install</code></pre>
+    </div>
+
+    <div class="step">
+        <h3>Step 4: Log in to Expo</h3>
+        <p>Login to your Expo account:</p>
+        <pre><code>eas login</code></pre>
+    </div>
+
+    <div class="step">
+        <h3>Step 5: Build the APK</h3>
+        <p>The eas.json file is already configured in the project. To build the APK, run:</p>
+        <pre><code>eas build -p android --profile preview</code></pre>
+        <p>This will create an APK using the 'preview' profile defined in eas.json.</p>
+    </div>
+
+    <div class="note">
+        <p><strong>Note:</strong> The build process will happen on Expo's servers. Once completed, you will be provided with a link to download the APK file.</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 6: Install on Android Device</h3>
+        <p>Once downloaded, transfer the APK to your Android device and install it. You might need to enable "Install from Unknown Sources" in your device settings.</p>
+    </div>
+
+    <div class="container">
+        <h2>Additional Build Options</h2>
+        <p>The project includes several build profiles in eas.json:</p>
+        <ul>
+            <li><strong>Development:</strong> <code>eas build -p android --profile development</code> - Creates a development build with dev tools enabled.</li>
+            <li><strong>Preview:</strong> <code>eas build -p android --profile preview</code> - Creates an internal distribution APK.</li>
+            <li><strong>Production:</strong> <code>eas build -p android --profile production</code> - Creates a production-ready app bundle (AAB).</li>
+        </ul>
+    </div>
+
+    <div class="note">
+        <p><strong>Troubleshooting:</strong> If you encounter any issues during the build process, refer to the <a href="https://docs.expo.dev/build/troubleshooting/">Expo Build Troubleshooting Guide</a>.</p>
+    </div>
+</body>
+</html>

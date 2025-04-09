@@ -1,185 +1,272 @@
+import { Platform } from 'react-native';
+
 // Brand colors
 export const BRAND = {
-  PRIMARY: '#4285F4', // Blue
-  SECONDARY: '#34A853', // Green
-  ACCENT: '#EA4335', // Red
-  NEUTRAL: '#FBBC05', // Yellow
+  primary: '#4285F4', // Google Blue
+  secondary: '#34A853', // Google Green
+  tertiary: '#FBBC05', // Google Yellow
+  quaternary: '#EA4335', // Google Red
+  neutral: '#5F6368', // Google Grey
 };
 
-// Light theme colors
+// Light theme
 export const lightTheme = {
   // Background colors
   background: {
-    primary: '#FFFFFF',
-    secondary: '#F8F9FA',
-    tertiary: '#F1F3F4',
-    accent: '#E8F0FE',
+    primary: '#FFFFFF', // Main background
+    secondary: '#F8F9FA', // Secondary background (cards, etc.)
+    tertiary: '#F1F3F4', // Tertiary background (inputs, etc.)
+    highlight: '#E8F0FE', // Highlight background
   },
+  
   // Text colors
   text: {
-    primary: '#202124',
-    secondary: '#5F6368',
-    tertiary: '#80868B',
-    accent: BRAND.PRIMARY,
-    inverse: '#FFFFFF',
+    primary: '#202124', // Primary text
+    secondary: '#5F6368', // Secondary text
+    tertiary: '#9AA0A6', // Tertiary text
+    disabled: '#BDC1C6', // Disabled text
+    inverse: '#FFFFFF', // Inverse text (on dark backgrounds)
   },
+  
+  // Primary brand colors
+  primary: {
+    main: BRAND.primary,
+    dark: '#3367D6',
+    light: '#8AB4F8',
+  },
+  
+  // Secondary brand colors
+  secondary: {
+    main: BRAND.secondary,
+    dark: '#137333',
+    light: '#81C995',
+  },
+  
+  // Error, warning, info, success colors
+  error: {
+    main: '#EA4335',
+    light: '#F6AEA9',
+    dark: '#C5221F',
+  },
+  warning: {
+    main: '#FBBC05',
+    light: '#FDE293',
+    dark: '#F29900',
+  },
+  info: {
+    main: '#4285F4',
+    light: '#8AB4F8',
+    dark: '#3367D6',
+  },
+  success: {
+    main: '#34A853',
+    light: '#81C995',
+    dark: '#137333',
+  },
+  
   // Border colors
-  border: {
-    light: '#DADCE0',
-    medium: '#BDC1C6',
-    dark: '#9AA0A6',
+  border: '#DADCE0',
+  divider: '#DADCE0',
+  
+  // Card colors
+  card: {
+    background: '#FFFFFF',
+    border: '#DADCE0',
+    shadow: 'rgba(60, 64, 67, 0.3)',
   },
+  
+  // Input colors
+  input: {
+    background: '#F1F3F4',
+    border: '#DADCE0',
+    placeholder: '#9AA0A6',
+  },
+  
   // Button colors
   button: {
     primary: {
-      background: BRAND.PRIMARY,
+      background: BRAND.primary,
       text: '#FFFFFF',
+      border: 'transparent',
     },
     secondary: {
       background: '#FFFFFF',
-      text: BRAND.PRIMARY,
-      border: BRAND.PRIMARY,
+      text: BRAND.primary,
+      border: BRAND.primary,
     },
-    success: {
-      background: BRAND.SECONDARY,
-      text: '#FFFFFF',
-    },
-    danger: {
-      background: BRAND.ACCENT,
-      text: '#FFFFFF',
-    },
-    warning: {
-      background: BRAND.NEUTRAL,
-      text: '#202124',
+    tertiary: {
+      background: 'transparent',
+      text: BRAND.primary,
+      border: 'transparent',
     },
     disabled: {
       background: '#F1F3F4',
       text: '#9AA0A6',
-      border: '#DADCE0',
+      border: 'transparent',
     },
   },
-  // Card colors
-  card: {
+  
+  // Status bar style (light-content or dark-content)
+  statusBar: 'dark-content',
+  
+  // Tab bar colors
+  tabBar: {
+    active: BRAND.primary,
+    inactive: '#9AA0A6',
     background: '#FFFFFF',
-    shadow: 'rgba(60, 64, 67, 0.15)',
+    border: '#DADCE0',
   },
-  // Status colors
-  status: {
-    success: BRAND.SECONDARY,
-    error: BRAND.ACCENT,
-    warning: BRAND.NEUTRAL,
-    info: BRAND.PRIMARY,
+  
+  // Switch colors
+  switch: {
+    active: BRAND.primary,
+    inactive: '#BDC1C6',
+    thumb: '#FFFFFF',
   },
-  // Chart colors
-  chart: {
-    primary: BRAND.PRIMARY,
-    secondary: BRAND.SECONDARY,
-    tertiary: BRAND.ACCENT,
-    quaternary: BRAND.NEUTRAL,
-    gradient: {
-      start: `${BRAND.PRIMARY}80`, // 50% opacity
-      end: `${BRAND.PRIMARY}10`, // 10% opacity
-    },
+  
+  // Animation colors
+  skeleton: {
+    start: '#F1F3F4',
+    end: '#E8EAED',
   },
-  // Mood colors
-  mood: {
-    happy: '#FF9F1C',
-    calm: '#2EC4B6',
-    sad: '#6E83B7',
-    stressed: '#EA4335',
-    angry: '#BF0603',
-    neutral: '#9AA0A6',
+  
+  // Shadow properties
+  shadow: {
+    color: 'rgba(60, 64, 67, 0.3)',
+    offset: { width: 0, height: 2 },
+    opacity: 0.2,
+    radius: 8,
+    elevation: 2,
   },
-  // Misc
-  divider: '#DADCE0',
-  overlay: 'rgba(32, 33, 36, 0.4)',
 };
 
-// Dark theme colors
+// Dark theme
 export const darkTheme = {
   // Background colors
   background: {
-    primary: '#202124',
-    secondary: '#303134',
-    tertiary: '#3C4043',
-    accent: '#1A73E8',
+    primary: '#121212', // Main background
+    secondary: '#1E1E1E', // Secondary background (cards, etc.)
+    tertiary: '#2A2A2A', // Tertiary background (inputs, etc.)
+    highlight: '#3C4043', // Highlight background
   },
+  
   // Text colors
   text: {
-    primary: '#FFFFFF',
-    secondary: '#DADCE0',
-    tertiary: '#9AA0A6',
-    accent: '#8AB4F8',
-    inverse: '#202124',
+    primary: '#E8EAED', // Primary text
+    secondary: '#9AA0A6', // Secondary text
+    tertiary: '#5F6368', // Tertiary text
+    disabled: '#5F6368', // Disabled text
+    inverse: '#202124', // Inverse text (on light backgrounds)
   },
+  
+  // Primary brand colors
+  primary: {
+    main: BRAND.primary,
+    dark: '#8AB4F8',
+    light: '#3367D6',
+  },
+  
+  // Secondary brand colors
+  secondary: {
+    main: BRAND.secondary,
+    dark: '#81C995',
+    light: '#137333',
+  },
+  
+  // Error, warning, info, success colors
+  error: {
+    main: '#EA4335',
+    light: '#C5221F',
+    dark: '#F6AEA9',
+  },
+  warning: {
+    main: '#FBBC05',
+    light: '#F29900',
+    dark: '#FDE293',
+  },
+  info: {
+    main: '#4285F4',
+    light: '#3367D6',
+    dark: '#8AB4F8',
+  },
+  success: {
+    main: '#34A853',
+    light: '#137333',
+    dark: '#81C995',
+  },
+  
   // Border colors
-  border: {
-    light: '#5F6368',
-    medium: '#80868B',
-    dark: '#9AA0A6',
+  border: '#5F6368',
+  divider: '#3C4043',
+  
+  // Card colors
+  card: {
+    background: '#1E1E1E',
+    border: '#3C4043',
+    shadow: 'rgba(0, 0, 0, 0.5)',
   },
+  
+  // Input colors
+  input: {
+    background: '#2A2A2A',
+    border: '#5F6368',
+    placeholder: '#5F6368',
+  },
+  
   // Button colors
   button: {
     primary: {
-      background: '#8AB4F8',
-      text: '#202124',
+      background: BRAND.primary,
+      text: '#FFFFFF',
+      border: 'transparent',
     },
     secondary: {
-      background: '#303134',
-      text: '#8AB4F8',
-      border: '#8AB4F8',
+      background: '#2A2A2A',
+      text: BRAND.primary,
+      border: BRAND.primary,
     },
-    success: {
-      background: '#81C995',
-      text: '#202124',
-    },
-    danger: {
-      background: '#F28B82',
-      text: '#202124',
-    },
-    warning: {
-      background: '#FDD663',
-      text: '#202124',
+    tertiary: {
+      background: 'transparent',
+      text: BRAND.primary,
+      border: 'transparent',
     },
     disabled: {
-      background: '#3C4043',
-      text: '#80868B',
-      border: '#5F6368',
+      background: '#2A2A2A',
+      text: '#5F6368',
+      border: 'transparent',
     },
   },
-  // Card colors
-  card: {
-    background: '#303134',
-    shadow: 'rgba(0, 0, 0, 0.25)',
+  
+  // Status bar style (light-content or dark-content)
+  statusBar: 'light-content',
+  
+  // Tab bar colors
+  tabBar: {
+    active: BRAND.primary,
+    inactive: '#9AA0A6',
+    background: '#1E1E1E',
+    border: '#3C4043',
   },
-  // Status colors
-  status: {
-    success: '#81C995',
-    error: '#F28B82',
-    warning: '#FDD663',
-    info: '#8AB4F8',
+  
+  // Switch colors
+  switch: {
+    active: BRAND.primary,
+    inactive: '#5F6368',
+    thumb: '#E8EAED',
   },
-  // Chart colors
-  chart: {
-    primary: '#8AB4F8',
-    secondary: '#81C995',
-    tertiary: '#F28B82',
-    quaternary: '#FDD663',
-    gradient: {
-      start: `${BRAND.PRIMARY}80`, // 50% opacity
-      end: `${BRAND.PRIMARY}10`, // 10% opacity
-    },
+  
+  // Animation colors
+  skeleton: {
+    start: '#2A2A2A',
+    end: '#3C4043',
   },
-  // Mood colors
-  mood: {
-    happy: '#FFC857',
-    calm: '#4ECDC4',
-    sad: '#8EAFE0',
-    stressed: '#F67280',
-    angry: '#FF5A5F',
-    neutral: '#9AA0A6',
+  
+  // Shadow properties
+  shadow: {
+    color: 'rgba(0, 0, 0, 0.5)',
+    offset: { width: 0, height: 2 },
+    opacity: 0.5,
+    radius: 8,
+    elevation: 4,
   },
-  // Misc
-  divider: '#5F6368',
-  overlay: 'rgba(0, 0, 0, 0.6)',
 };

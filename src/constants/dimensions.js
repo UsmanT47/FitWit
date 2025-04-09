@@ -1,43 +1,45 @@
-import { Dimensions, Platform } from 'react-native';
+import { Dimensions, Platform, StatusBar } from 'react-native';
 
-// Device screen dimensions
+// Device dimensions
 export const SCREEN_WIDTH = Dimensions.get('window').width;
 export const SCREEN_HEIGHT = Dimensions.get('window').height;
 export const IS_SMALL_DEVICE = SCREEN_WIDTH < 375;
 
-// Spacing values for consistent layout
+// Spacing
 export const SPACING = {
   TINY: 4,
-  SMALL: 8,
+  XSMALL: 8,
+  SMALL: 12,
   MEDIUM: 16,
   LARGE: 24,
   XLARGE: 32,
   XXLARGE: 48,
 };
 
-// Border radius values for consistent styling
+// Border radius
 export const BORDER_RADIUS = {
   SMALL: 4,
   MEDIUM: 8,
-  LARGE: 16,
-  XLARGE: 24,
-  ROUND: 9999, // Use for circular elements
+  LARGE: 12,
+  XLARGE: 16,
+  XXLARGE: 24,
+  ROUND: 9999,
 };
 
-// Font sizes for consistent typography
+// Font sizes
 export const FONT_SIZES = {
   TINY: 10,
-  SMALL: 12,
-  MEDIUM: 14,
-  REGULAR: 16,
+  XSMALL: 12,
+  SMALL: 14,
+  MEDIUM: 16,
   LARGE: 18,
   XLARGE: 20,
   XXLARGE: 24,
-  HEADING: 28,
-  TITLE: 32,
+  XXXLARGE: 30,
+  DISPLAY: 36,
 };
 
-// Icon sizes for consistent styling
+// Icon sizes
 export const ICON_SIZES = {
   TINY: 12,
   SMALL: 16,
@@ -46,37 +48,28 @@ export const ICON_SIZES = {
   XLARGE: 48,
 };
 
-// Shadow styles for elevation
+// Shadows
 export const SHADOWS = {
-  LIGHT: {
+  SMALL: {
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   MEDIUM: {
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 4,
   },
-  STRONG: {
+  LARGE: {
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5.46,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 };
 
@@ -84,7 +77,7 @@ export const SHADOWS = {
 export const HEADER_HEIGHT = Platform.OS === 'ios' ? 88 : 64;
 export const HEADER_HEIGHT_EXPANDED = Platform.OS === 'ios' ? 128 : 104;
 
-// Bottom tabs height
+// Bottom tab
 export const BOTTOM_TAB_HEIGHT = Platform.OS === 'ios' ? 83 : 64; // Includes safe area on iOS
 
 // Input heights
@@ -102,13 +95,23 @@ export const AVATAR_SIZES = {
 
 // Card dimensions
 export const CARD = {
-  WIDTH: SCREEN_WIDTH - (SPACING.LARGE * 2),
-  HEIGHT: 160,
   BORDER_RADIUS: 12,
+  PADDING: SPACING.MEDIUM,
+  MARGIN: SPACING.SMALL,
+  SHADOW: SHADOWS.SMALL,
 };
 
-// Calculate dynamic sizes based on screen width
+// Helper for responsive sizing
 export const dynamicSize = (size) => {
-  const baseWidth = 375; // iPhone 8 width
-  return (SCREEN_WIDTH / baseWidth) * size;
+  const baseWidth = 375; // Base width (iPhone X)
+  const scaleFactor = SCREEN_WIDTH / baseWidth;
+  
+  // Limit the scaling to prevent too small/large sizes
+  if (scaleFactor < 0.8) {
+    return size * 0.8;
+  } else if (scaleFactor > 1.2) {
+    return size * 1.2;
+  }
+  
+  return size * scaleFactor;
 };
