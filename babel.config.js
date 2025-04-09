@@ -3,8 +3,11 @@ module.exports = function(api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'react-native-reanimated/plugin',
+      // The order of plugins is important
       '@babel/plugin-transform-export-namespace-from',
+      'react-native-reanimated/plugin',
     ],
+    // Add this to ensure correct CommonJS module handling
+    sourceType: 'unambiguous',
   };
 };

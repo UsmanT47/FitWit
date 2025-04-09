@@ -1,18 +1,12 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+const React = require('react');
+const { View, Text } = require('react-native');
 
-// Simple test app to verify configuration
-export default function App() {
-  console.log('App is starting...');
-  
+function App() {
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
-      <StatusBar style="auto" />
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>FitWit Health App</Text>
-      <Text style={{ fontSize: 16, textAlign: 'center', paddingHorizontal: 20 }}>
-        Welcome to FitWit! This is a simplified version to test if the app loads correctly.
-      </Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>FitWit Test App</Text>
     </View>
   );
 }
+
+module.exports = App;

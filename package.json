@@ -10,7 +10,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@babel/core": "^7.26.10",
     "@babel/plugin-transform-export-namespace-from": "^7.25.9",
+    "@babel/preset-env": "^7.26.9",
     "@expo/metro-runtime": "^4.0.1",
     "@expo/vector-icons": "^14.1.0",
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -28,6 +30,7 @@
     "expo-speech": "^13.0.1",
     "expo-status-bar": "^2.0.1",
     "http-server": "^14.1.1",
+    "metro-react-native-babel-transformer": "^0.77.0",
     "mongoose": "^8.13.2",
     "openai": "^4.93.0",
     "pg": "^8.14.1",

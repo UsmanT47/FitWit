@@ -1,31 +1,20 @@
 // Learn more https://docs.expo.io/guides/customizing-metro
 const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
 
 /** @type {import('expo/metro-config').MetroConfig} */
-const config = getDefaultConfig(__dirname, {
-  // Enable web support
-  isCSSEnabled: true,
-});
+const config = getDefaultConfig(__dirname);
 
-// Add resolution for web-specific extensions
-config.resolver.sourceExts = [
-  ...config.resolver.sourceExts,
-  'web.js',
-  'web.jsx',
-  'web.ts',
-  'web.tsx',
-  'mjs',
-];
+// Ensure proper handling of CommonJS modules
+config.resolver.sourceExts = ['js', 'jsx', 'json', 'ts', 'tsx'];
+config.resolver.extraNodeModules = {
+  'react-native-reanimated': require.resolve('react-native-reanimated'),
+};
 
-// Add support for additional asset types
-config.resolver.assetExts = [
-  ...config.resolver.assetExts,
-  'pem',
-  'cjs',
-];
-
-// Use the project's web directory for the template
-config.transformer.publicPath = '/assets';
+// Explicitly setting transformer options
+config.transformer = {
+  ...config.transformer,
+  babelTransformerPath: require.resolve('metro-react-native-babel-transformer'),
+  assetPlugins: ['expo-asset/tools/hashAssetFiles'],
+};
 
 module.exports = config;
