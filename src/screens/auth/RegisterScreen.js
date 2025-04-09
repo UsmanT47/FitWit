@@ -8,27 +8,49 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
-  Alert
+  ScrollView
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { SPACING, FONT_SIZES } from '../../constants/dimensions';
 
-const LoginScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation }) => {
   const { theme } = useTheme();
-  const { login } = useAuth();
+  const { register } = useAuth();
   
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Handle login
-  const handleLogin = async () => {
+  // Validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
+  // Handle registration
+  const handleRegister = async () => {
     // Validate inputs
-    if (!username || !password) {
+    if (!username || !email || !password || !confirmPassword) {
       setError('Please fill in all fields');
+      return;
+    }
+    
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
     
@@ -36,26 +58,21 @@ const LoginScreen = ({ navigation }) => {
       setIsLoading(true);
       setError('');
       
-      // Call login function from Auth context
-      await login({ username, password });
+      // Call register function from Auth context
+      await register({ username, email, password });
       
-      // Login successful - Auth context will handle navigation
+      // Registration successful - Auth context will handle navigation
     } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please try again.');
+      console.error('Registration error:', error);
+      setError(error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Navigate to registration screen
-  const goToRegister = () => {
-    navigation.navigate('Register');
-  };
-  
-  // Navigate to forgot password screen
-  const goToForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
+  // Navigate to login screen
+  const goToLogin = () => {
+    navigation.navigate('Login');
   };
   
   return (
@@ -72,10 +89,10 @@ const LoginScreen = ({ navigation }) => {
       >
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text.primary }]}>
-            Welcome Back
+            Create Account
           </Text>
           <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-            Sign in to continue to FitWit
+            Sign up to start tracking your health
           </Text>
         </View>
         
@@ -94,11 +111,34 @@ const LoginScreen = ({ navigation }) => {
                   borderColor: theme.border
                 }
               ]}
-              placeholder="Enter your username"
+              placeholder="Choose a username"
               placeholderTextColor={theme.text.tertiary}
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
+            />
+          </View>
+          
+          {/* Email Input */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: theme.text.secondary }]}>
+              Email
+            </Text>
+            <TextInput
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: theme.background.secondary,
+                  color: theme.text.primary,
+                  borderColor: theme.border
+                }
+              ]}
+              placeholder="Enter your email"
+              placeholderTextColor={theme.text.tertiary}
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
           </View>
           
@@ -116,7 +156,7 @@ const LoginScreen = ({ navigation }) => {
                   borderColor: theme.border
                 }
               ]}
-              placeholder="Enter your password"
+              placeholder="Create a password"
               placeholderTextColor={theme.text.tertiary}
               secureTextEntry
               value={password}
@@ -124,12 +164,27 @@ const LoginScreen = ({ navigation }) => {
             />
           </View>
           
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword} onPress={goToForgotPassword}>
-            <Text style={[styles.forgotPasswordText, { color: theme.primary.main }]}>
-              Forgot password?
+          {/* Confirm Password Input */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: theme.text.secondary }]}>
+              Confirm Password
             </Text>
-          </TouchableOpacity>
+            <TextInput
+              style={[
+                styles.input,
+                { 
+                  backgroundColor: theme.background.secondary,
+                  color: theme.text.primary,
+                  borderColor: theme.border
+                }
+              ]}
+              placeholder="Confirm your password"
+              placeholderTextColor={theme.text.tertiary}
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+          </View>
           
           {/* Display Error */}
           {error ? (
@@ -138,33 +193,33 @@ const LoginScreen = ({ navigation }) => {
             </Text>
           ) : null}
           
-          {/* Login Button */}
+          {/* Register Button */}
           <TouchableOpacity
             style={[
               styles.button,
               { backgroundColor: theme.primary.main }
             ]}
-            onPress={handleLogin}
+            onPress={handleRegister}
             disabled={isLoading}
           >
             {isLoading ? (
               <ActivityIndicator color={theme.primary.contrast} />
             ) : (
               <Text style={[styles.buttonText, { color: theme.primary.contrast }]}>
-                Sign In
+                Sign Up
               </Text>
             )}
           </TouchableOpacity>
         </View>
         
-        {/* Register Link */}
+        {/* Login Link */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: theme.text.secondary }]}>
-            Don't have an account?{' '}
+            Already have an account?{' '}
           </Text>
-          <TouchableOpacity onPress={goToRegister}>
+          <TouchableOpacity onPress={goToLogin}>
             <Text style={[styles.linkText, { color: theme.primary.main }]}>
-              Sign Up
+              Sign In
             </Text>
           </TouchableOpacity>
         </View>
@@ -207,13 +262,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.MEDIUM,
     fontSize: FONT_SIZES.REGULAR,
   },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: SPACING.LARGE,
-  },
-  forgotPasswordText: {
-    fontSize: FONT_SIZES.SMALL,
-  },
   errorText: {
     fontSize: FONT_SIZES.SMALL,
     marginBottom: SPACING.MEDIUM,
@@ -242,4 +290,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default RegisterScreen;

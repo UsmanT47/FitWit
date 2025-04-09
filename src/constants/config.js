@@ -1,61 +1,78 @@
-/**
- * Global configuration for the FitWit app
- */
-
-// API configurations
-export const API_URL = process.env.API_URL || 'http://localhost:8000/api';
+// API configuration
+export const API_URL = 'https://fitwit-api.example.com/api';
+export const NUTRITION_API_URL = 'https://nutrition-api.example.com/api';
 
 // Feature flags
 export const FEATURES = {
-  // Use local storage instead of API calls during development
-  USE_LOCAL_STORAGE: true,
-  
-  // Enable mock nutrition API instead of Nutritionix
-  USE_MOCK_NUTRITION_API: true,
-  
-  // Enable push notifications
-  ENABLE_PUSH_NOTIFICATIONS: true,
-  
-  // Enable AI insights generation
-  ENABLE_AI_INSIGHTS: true,
+  BARCODE_SCANNING: true,
+  VOICE_INPUT: true,
+  ADVANCED_ANALYTICS: true,
+  WEARABLE_SYNC: false, // Coming soon
+  SOCIAL_SHARING: false, // Coming soon
 };
 
-// App defaults
+// Default values
 export const DEFAULT_VALUES = {
-  // Default water goal in glasses/day
-  WATER_GOAL: 8,
-  
-  // Default sleep goal in hours
-  SLEEP_GOAL: 8,
-  
-  // Default date range for insights (in days)
-  INSIGHTS_DATE_RANGE: 14,
+  WATER_GOAL: 8, // Default water goal in glasses
+  SLEEP_GOAL: 8, // Default sleep goal in hours
+  EXERCISE_GOAL: 30, // Default exercise goal in minutes
+  STEP_GOAL: 10000, // Default step goal
 };
 
-// Analytics configuration
-export const ANALYTICS = {
-  ENABLED: false, // Set to true when analytics service is integrated
-  TRACKING_ID: '', // Add tracking ID when analytics service is integrated
+// App info
+export const APP_INFO = {
+  VERSION: '1.0.0',
+  BUILD: '1',
+  ENVIRONMENT: __DEV__ ? 'development' : 'production',
 };
 
-// Common IDs used in the app
-export const DATA_TYPES = {
-  FOOD: 'food',
-  MOOD: 'mood',
-  EXERCISE: 'exercise',
-  SLEEP: 'sleep',
-  WATER: 'water',
-  CUSTOM: 'custom',
+// Theme configuration
+export const THEMES = {
+  LIGHT: 'light',
+  DARK: 'dark',
+  SYSTEM: 'system',
 };
 
-// Configuration for data visualization
-export const VISUALIZATION_CONFIG = {
-  CHART_COLORS: {
-    FOOD: '#FF5722',    // Coral
-    MOOD: '#2196F3',    // Blue
-    EXERCISE: '#4CAF50', // Green
-    SLEEP: '#9C27B0',   // Purple
-    WATER: '#03A9F4',   // Light Blue
-  },
-  MAX_DATA_POINTS: 14, // Max number of data points to show on charts
+// Date formats
+export const DATE_FORMATS = {
+  DISPLAY: 'MMM dd, yyyy',
+  API: 'yyyy-MM-dd',
+  TIME: 'h:mm a',
+};
+
+// Animation durations
+export const ANIMATION = {
+  DURATION_SHORT: 150,
+  DURATION_MEDIUM: 300,
+  DURATION_LONG: 500,
+};
+
+// Local storage keys (deprecated, use storageKeys from storageService instead)
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: '@fitwit_auth_token',
+  USER_DATA: '@fitwit_user_data',
+  THEME: '@fitwit_theme',
+  ONBOARDING_COMPLETED: '@fitwit_onboarding_completed',
+};
+
+// Error messages
+export const ERROR_MESSAGES = {
+  DEFAULT: 'Something went wrong. Please try again.',
+  NETWORK: 'Network error. Please check your connection.',
+  AUTH: 'Authentication failed. Please login again.',
+  PERMISSION: 'Permission denied. Please grant the required permissions.',
+};
+
+// Success messages
+export const SUCCESS_MESSAGES = {
+  SAVED: 'Successfully saved!',
+  UPDATED: 'Successfully updated!',
+  DELETED: 'Successfully deleted!',
+};
+
+// Timeouts
+export const TIMEOUTS = {
+  API_REQUEST: 30000, // 30 seconds
+  AUTHENTICATION: 10000, // 10 seconds
+  SYNC: 20000, // 20 seconds
 };

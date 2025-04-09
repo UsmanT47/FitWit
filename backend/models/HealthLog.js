@@ -1,217 +1,67 @@
 const mongoose = require('mongoose');
 
-// Base schema for common fields
-const baseLogFields = {
-  userId: {
+const HealthLogSchema = new mongoose.Schema({
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    index: true,
   },
   date: {
     type: Date,
     required: true,
-    index: true,
+    default: Date.now,
+  },
+  weight: {
+    type: Number,
+  },
+  height: {
+    type: Number,
+  },
+  bmi: {
+    type: Number, 
+  },
+  bloodPressureSystolic: {
+    type: Number,
+  },
+  bloodPressureDiastolic: {
+    type: Number,
+  },
+  heartRate: {
+    type: Number,
+  },
+  bloodGlucose: {
+    type: Number,
+  },
+  bodyTemperature: {
+    type: Number,
+  },
+  bodyFatPercentage: {
+    type: Number, 
   },
   notes: {
     type: String,
-    trim: true,
   },
-  created: {
-    type: Date,
-    default: Date.now,
+  source: {
+    type: String, // e.g., 'manual', 'apple_health', 'google_fit', etc.
   },
-  updated: {
-    type: Date,
-    default: Date.now,
-  }
-};
-
-// Food log schema
-const FoodLogSchema = new mongoose.Schema({
-  ...baseLogFields,
-  food_name: {
-    type: String,
-    required: true,
-    trim: true,
+  externalData: {
+    type: Object, // store additional data from external sources
   },
-  brand_name: {
-    type: String,
-    trim: true,
-  },
-  meal_type: {
-    type: String,
-    enum: ['Breakfast', 'Lunch', 'Dinner', 'Snack'],
-    required: true,
-  },
-  serving_qty: {
-    type: Number,
-    required: true,
-  },
-  serving_unit: {
-    type: String,
-    trim: true,
-  },
-  calories: {
-    type: Number,
-  },
-  protein: {
-    type: Number,
-  },
-  carbs: {
-    type: Number,
-  },
-  fat: {
-    type: Number,
-  },
-  time: {
-    type: String,
-  }
+}, {
+  timestamps: true,
 });
 
-// Mood log schema
-const MoodLogSchema = new mongoose.Schema({
-  ...baseLogFields,
-  value: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 5,
-  },
-  label: {
-    type: String,
-    required: true,
-    enum: ['Terrible', 'Bad', 'Neutral', 'Good', 'Great'],
-  },
-  factors: {
-    type: [String],
-    default: [],
-  },
-  time: {
-    type: String,
+// Calculate BMI before saving if weight and height are available
+HealthLogSchema.pre('save', function(next) {
+  if (this.weight && this.height && this.height > 0) {
+    // Calculate BMI: weight(kg) / (height(m) * height(m))
+    // Assuming weight is in kg and height is in cm
+    const heightInMeters = this.height / 100;
+    this.bmi = this.weight / (heightInMeters * heightInMeters);
+    // Round to 1 decimal place
+    this.bmi = Math.round(this.bmi * 10) / 10;
   }
+  next();
 });
 
-// Exercise log schema
-const ExerciseLogSchema = new mongoose.Schema({
-  ...baseLogFields,
-  type: {
-    type: String,
-    required: true,
-  },
-  duration: {
-    type: Number,
-    required: true,
-  },
-  intensity: {
-    type: String,
-    enum: ['light', 'moderate', 'vigorous'],
-    default: 'moderate',
-  },
-  calories: {
-    type: Number,
-  },
-  isOutdoor: {
-    type: Boolean,
-    default: false,
-  },
-  time: {
-    type: String,
-  }
-});
-
-// Sleep log schema
-const SleepLogSchema = new mongoose.Schema({
-  ...baseLogFields,
-  bedtime: {
-    type: String,
-    required: true,
-  },
-  wakeTime: {
-    type: String,
-    required: true,
-  },
-  duration: {
-    type: Number,
-    required: true,
-  },
-  quality: {
-    type: String,
-    enum: ['Poor', 'Fair', 'Good', 'Excellent'],
-    required: true,
-  },
-  disruptors: {
-    type: [String],
-    default: [],
-  },
-  deepSleep: {
-    type: Boolean,
-    default: false,
-  }
-});
-
-// Water log schema
-const WaterLogSchema = new mongoose.Schema({
-  ...baseLogFields,
-  glasses: {
-    type: Number,
-    required: true,
-    min: 0,
-  },
-  goal: {
-    type: Number,
-    default: 8,
-  },
-  time: {
-    type: String,
-  }
-});
-
-// Reminder schema
-const ReminderSchema = new mongoose.Schema({
-  ...baseLogFields,
-  title: {
-    type: String,
-    required: true,
-  },
-  type: {
-    type: String,
-    required: true,
-    enum: ['food', 'water', 'mood', 'exercise', 'sleep', 'custom'],
-  },
-  time: {
-    type: String,
-    required: true,
-  },
-  enabled: {
-    type: Boolean,
-    default: true,
-  },
-  frequency: {
-    type: mongoose.Schema.Types.Mixed,
-    default: 'daily',
-  },
-  description: {
-    type: String,
-  },
-  notificationId: {
-    type: String,
-  }
-});
-
-// Create models from schemas
-const FoodLog = mongoose.model('FoodLog', FoodLogSchema);
-const MoodLog = mongoose.model('MoodLog', MoodLogSchema);
-const ExerciseLog = mongoose.model('ExerciseLog', ExerciseLogSchema);
-const SleepLog = mongoose.model('SleepLog', SleepLogSchema);
-const WaterLog = mongoose.model('WaterLog', WaterLogSchema);
-const Reminder = mongoose.model('Reminder', ReminderSchema);
-
-module.exports = {
-  FoodLog,
-  MoodLog,
-  ExerciseLog,
-  SleepLog,
-  WaterLog,
-  Reminder
-};
+module.exports = mongoose.model('HealthLog', HealthLogSchema);

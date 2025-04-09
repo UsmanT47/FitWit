@@ -1,26 +1,4 @@
-// Simulated API for authentication
-// In a real app, this would call a backend API
-
-// Mock user database
-const users = [
-  {
-    id: '1',
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'password123',
-    height: 175,
-    weight: 70,
-    gender: 'male',
-    birthdate: '1990-01-01',
-    fitnessGoal: 'weightLoss',
-    activityLevel: 'moderate',
-    preferences: {
-      notifications: true,
-      darkMode: false,
-      units: 'metric',
-    },
-  },
-];
+import { API_URL } from '../constants/config';
 
 /**
  * Register a new user
@@ -29,36 +7,23 @@ const users = [
  */
 export const registerUser = async (userData) => {
   try {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
     
-    // Check if user already exists
-    if (users.some(u => u.email === userData.email)) {
-      throw new Error('User with this email already exists');
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Registration failed');
     }
     
-    // Create new user
-    const newUser = {
-      id: String(users.length + 1),
-      ...userData,
-      preferences: {
-        notifications: true,
-        darkMode: false,
-        units: 'metric',
-      },
-    };
-    
-    // Remove password from returned user object
-    const { password, ...userWithoutPassword } = newUser;
-    
-    // Add user to "database"
-    users.push(newUser);
-    
-    return {
-      token: `mock-token-${newUser.id}`,
-      user: userWithoutPassword,
-    };
+    return data;
   } catch (error) {
+    console.error('Registration API error:', error);
     throw error;
   }
 };
@@ -70,25 +35,23 @@ export const registerUser = async (userData) => {
  */
 export const loginUser = async (credentials) => {
   try {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
     
-    // Find user
-    const user = users.find(u => u.email === credentials.email);
+    const data = await response.json();
     
-    // Check if user exists and password matches
-    if (!user || user.password !== credentials.password) {
-      throw new Error('Invalid credentials');
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
     }
     
-    // Remove password from returned user object
-    const { password, ...userWithoutPassword } = user;
-    
-    return {
-      token: `mock-token-${user.id}`,
-      user: userWithoutPassword,
-    };
+    return data;
   } catch (error) {
+    console.error('Login API error:', error);
     throw error;
   }
 };
@@ -100,16 +63,23 @@ export const loginUser = async (credentials) => {
  */
 export const refreshToken = async (refreshToken) => {
   try {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${API_URL}/auth/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
     
-    // In a real app, we would validate the refresh token and generate a new access token
-    // For this mock, we'll just return a new token
+    const data = await response.json();
     
-    return {
-      token: `mock-token-refreshed-${Date.now()}`,
-    };
+    if (!response.ok) {
+      throw new Error(data.message || 'Token refresh failed');
+    }
+    
+    return data;
   } catch (error) {
+    console.error('Token refresh API error:', error);
     throw error;
   }
 };
@@ -121,31 +91,74 @@ export const refreshToken = async (refreshToken) => {
  */
 export const logoutUser = async (token) => {
   try {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const response = await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
     
-    // In a real app, we might invalidate the token on the server
+    const data = await response.json();
     
-    return {
-      success: true,
-      message: 'Logged out successfully',
-    };
+    if (!response.ok) {
+      throw new Error(data.message || 'Logout failed');
+    }
+    
+    return data;
   } catch (error) {
+    console.error('Logout API error:', error);
     throw error;
   }
 };
 
-// Local API interface
+// Local implementation for testing/development without backend
 export const localAuthApi = {
   async register(userData) {
-    return registerUser(userData);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Validation
+    if (!userData.username || !userData.email || !userData.password) {
+      throw new Error('All fields are required');
+    }
+    
+    // Return mock response
+    return {
+      token: 'mock-jwt-token',
+      user: {
+        id: '1',
+        username: userData.username,
+        email: userData.email,
+      }
+    };
   },
   
   async login(credentials) {
-    return loginUser(credentials);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Validation
+    if (!credentials.username || !credentials.password) {
+      throw new Error('Username and password are required');
+    }
+    
+    // For development, accept any credentials
+    return {
+      token: 'mock-jwt-token',
+      user: {
+        id: '1',
+        username: credentials.username,
+        email: 'user@example.com',
+      }
+    };
   },
   
   async logout() {
-    return logoutUser();
-  },
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return mock response
+    return { message: 'Logged out successfully' };
+  }
 };

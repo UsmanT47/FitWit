@@ -1,192 +1,269 @@
-import axios from 'axios';
+import { API_URL, NUTRITION_API_URL } from '../constants/config';
 
-// Nutritionix API configuration
-const NUTRITIONIX_API_URL = 'https://trackapi.nutritionix.com/v2';
-const APP_ID = process.env.NUTRITIONIX_APP_ID || '';
-const APP_KEY = process.env.NUTRITIONIX_APP_KEY || '';
-
-// Headers for Nutritionix API
-const API_HEADERS = {
-  'x-app-id': APP_ID,
-  'x-app-key': APP_KEY,
-  'Content-Type': 'application/json'
-};
-
-// Search for food items
+/**
+ * Search food items by query
+ * @param {String} query Search query
+ * @returns {Promise<Array>} Array of food items
+ */
 export const searchFoodItems = async (query) => {
-  if (!query || query.trim() === '') {
-    return { items: [] };
-  }
-  
   try {
-    const response = await axios.get(`${NUTRITIONIX_API_URL}/search/instant`, {
-      params: { query },
-      headers: API_HEADERS
+    const response = await fetch(`${API_URL}/nutrition/search?query=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     
-    return {
-      items: response.data.branded || []
-    };
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to search food items');
+    }
+    
+    return data;
   } catch (error) {
-    console.error('Error searching food items:', error);
-    throw handleApiError(error);
+    console.error('Search food API error:', error);
+    throw error;
   }
 };
 
-// Get nutritional information for food by natural language query
+/**
+ * Get food nutrients using natural language
+ * @param {String} query Natural language query
+ * @returns {Promise<Object>} Food nutrients data
+ */
 export const getNutrientsByNaturalLanguage = async (query) => {
-  if (!query || query.trim() === '') {
-    throw new Error('Query is required');
-  }
-  
   try {
-    const response = await axios.post(
-      `${NUTRITIONIX_API_URL}/natural/nutrients`,
-      { query },
-      { headers: API_HEADERS }
-    );
-    
-    return response.data.foods || [];
-  } catch (error) {
-    console.error('Error getting nutrients:', error);
-    throw handleApiError(error);
-  }
-};
-
-// Get nutritional information for a specific food item
-export const getFoodNutrients = async (foodId) => {
-  if (!foodId) {
-    throw new Error('Food ID is required');
-  }
-  
-  try {
-    const response = await axios.get(`${NUTRITIONIX_API_URL}/item`, {
-      params: { id: foodId },
-      headers: API_HEADERS
+    const response = await fetch(`${API_URL}/nutrition/natural?query=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     
-    return response.data;
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to get nutrients');
+    }
+    
+    return data;
   } catch (error) {
-    console.error('Error getting food nutrients:', error);
-    throw handleApiError(error);
+    console.error('Natural language nutrition API error:', error);
+    throw error;
   }
 };
 
-// Mock API for development without API keys
+/**
+ * Get food nutrients by food ID
+ * @param {String} foodId Food ID
+ * @returns {Promise<Object>} Food nutrients data
+ */
+export const getFoodNutrients = async (foodId) => {
+  try {
+    const response = await fetch(`${API_URL}/nutrition/food/${foodId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to get food nutrients');
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Food nutrients API error:', error);
+    throw error;
+  }
+};
+
+// Mock implementation for testing/development without backend
 export const mockNutritionApi = {
   async searchFoodItems(query) {
-    // Simulated response
-    return {
-      items: [
-        { 
-          food_name: 'Apple', 
-          nix_item_id: 'apple1', 
-          brand_name: 'Generic',
-          serving_qty: 1,
-          serving_unit: 'medium',
-          nf_calories: 95
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    // Return mock response
+    return [
+      {
+        id: '1',
+        name: 'Apple',
+        brand: null,
+        calories: 52,
+        servingSize: '100g',
+        nutrients: {
+          protein: 0.3,
+          carbs: 14,
+          fat: 0.2,
+          fiber: 2.4,
         },
-        { 
-          food_name: 'Banana', 
-          nix_item_id: 'banana1', 
-          brand_name: 'Generic',
-          serving_qty: 1,
-          serving_unit: 'medium',
-          nf_calories: 105
+      },
+      {
+        id: '2',
+        name: 'Banana',
+        brand: null,
+        calories: 89,
+        servingSize: '100g',
+        nutrients: {
+          protein: 1.1,
+          carbs: 22.8,
+          fat: 0.3,
+          fiber: 2.6,
         },
-        { 
-          food_name: 'Chicken Breast', 
-          nix_item_id: 'chicken1', 
-          brand_name: 'Generic',
-          serving_qty: 3,
-          serving_unit: 'oz',
-          nf_calories: 140
-        }
-      ].filter(item => 
-        item.food_name.toLowerCase().includes(query.toLowerCase())
-      )
-    };
+      },
+      {
+        id: '3',
+        name: 'Chicken Breast',
+        brand: null,
+        calories: 165,
+        servingSize: '100g',
+        nutrients: {
+          protein: 31,
+          carbs: 0,
+          fat: 3.6,
+          fiber: 0,
+        },
+      },
+      {
+        id: '4',
+        name: 'Salmon',
+        brand: null,
+        calories: 208,
+        servingSize: '100g',
+        nutrients: {
+          protein: 20,
+          carbs: 0,
+          fat: 13,
+          fiber: 0,
+        },
+      },
+      {
+        id: '5',
+        name: 'Brown Rice',
+        brand: null,
+        calories: 112,
+        servingSize: '100g',
+        nutrients: {
+          protein: 2.6,
+          carbs: 23,
+          fat: 0.9,
+          fiber: 1.8,
+        },
+      },
+    ].filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
   },
   
   async getNutrientsByNaturalLanguage(query) {
-    // Simulated response
-    const foodItems = {
-      'apple': { 
-        food_name: 'apple', 
-        nf_calories: 95, 
-        nf_protein: 0.5, 
-        nf_total_carbohydrate: 25, 
-        nf_total_fat: 0.3 
-      },
-      'banana': { 
-        food_name: 'banana', 
-        nf_calories: 105, 
-        nf_protein: 1.3, 
-        nf_total_carbohydrate: 27, 
-        nf_total_fat: 0.4 
-      },
-      'chicken': { 
-        food_name: 'chicken breast', 
-        nf_calories: 165, 
-        nf_protein: 31, 
-        nf_total_carbohydrate: 0, 
-        nf_total_fat: 3.6 
-      }
-    };
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simple parsing of the query
-    const words = query.toLowerCase().split(' ');
-    const results = [];
-    
-    for (const word of words) {
-      for (const [key, value] of Object.entries(foodItems)) {
-        if (word.includes(key)) {
-          results.push(value);
-          break;
-        }
-      }
+    // Return mock response based on query
+    if (query.toLowerCase().includes('apple')) {
+      return {
+        name: 'Apple',
+        calories: 52,
+        servingSize: '1 medium (182g)',
+        nutrients: {
+          protein: 0.3,
+          carbs: 14,
+          fat: 0.2,
+          fiber: 2.4,
+          sugar: 10.4,
+          sodium: 1,
+        },
+      };
+    } else if (query.toLowerCase().includes('chicken')) {
+      return {
+        name: 'Chicken Breast',
+        calories: 165,
+        servingSize: '100g',
+        nutrients: {
+          protein: 31,
+          carbs: 0,
+          fat: 3.6,
+          fiber: 0,
+          sugar: 0,
+          sodium: 74,
+        },
+      };
+    } else {
+      return {
+        name: query,
+        calories: 100,
+        servingSize: '100g',
+        nutrients: {
+          protein: 5,
+          carbs: 10,
+          fat: 5,
+          fiber: 2,
+          sugar: 2,
+          sodium: 50,
+        },
+      };
     }
-    
-    return results.length > 0 ? results : [{
-      food_name: query,
-      nf_calories: 100,
-      nf_protein: 2,
-      nf_total_carbohydrate: 15,
-      nf_total_fat: 2
-    }];
   },
   
   async getFoodNutrients(foodId) {
-    // Simulated response
-    return {
-      food_name: 'Sample Food',
-      nf_calories: 150,
-      nf_protein: 5,
-      nf_total_carbohydrate: 20,
-      nf_total_fat: 6,
-      nf_dietary_fiber: 3,
-      nf_sugars: 10,
-      nf_sodium: 120,
-      serving_weight_grams: 100,
-      serving_unit: 'g',
-      serving_qty: 1
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Return mock response based on foodId
+    const foods = {
+      '1': {
+        id: '1',
+        name: 'Apple',
+        calories: 52,
+        servingSize: '1 medium (182g)',
+        nutrients: {
+          protein: 0.3,
+          carbs: 14,
+          fat: 0.2,
+          fiber: 2.4,
+          sugar: 10.4,
+          sodium: 1,
+          vitaminA: 54,
+          vitaminC: 4.6,
+          calcium: 6,
+          iron: 0.1,
+        },
+      },
+      '2': {
+        id: '2',
+        name: 'Banana',
+        calories: 89,
+        servingSize: '1 medium (118g)',
+        nutrients: {
+          protein: 1.1,
+          carbs: 22.8,
+          fat: 0.3,
+          fiber: 2.6,
+          sugar: 12.2,
+          sodium: 1,
+          vitaminA: 64,
+          vitaminC: 8.7,
+          calcium: 5,
+          iron: 0.3,
+        },
+      },
     };
-  }
-};
-
-// Helper to handle API errors
-const handleApiError = (error) => {
-  if (error.response) {
-    return {
-      status: error.response.status,
-      message: error.response.data?.message || 'Nutrition API error occurred',
-      error: error.response.data
+    
+    return foods[foodId] || {
+      id: foodId,
+      name: 'Unknown Food',
+      calories: 100,
+      servingSize: '100g',
+      nutrients: {
+        protein: 5,
+        carbs: 10,
+        fat: 5,
+        fiber: 2,
+        sugar: 2,
+        sodium: 50,
+      },
     };
-  }
-  
-  return {
-    status: 500,
-    message: error.message || 'Network error occurred',
-    error: error
-  };
+  },
 };

@@ -1,149 +1,194 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '../constants/config';
 import { localAuthApi } from '../api/authApi';
 
+// Create the auth context
 const AuthContext = createContext({
-  isAuthenticated: false,
   user: null,
+  token: null,
+  isAuthenticated: false,
   isLoading: true,
   login: () => {},
   register: () => {},
   logout: () => {},
-  updateProfile: () => {},
+  updateUser: () => {},
 });
 
+// Auth provider component
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  
+  // Load auth state from storage on mount
   useEffect(() => {
-    // Check if user is already logged in
-    const checkLoginStatus = async () => {
+    const loadAuthState = async () => {
       try {
-        const token = await AsyncStorage.getItem('userToken');
-        const userData = await AsyncStorage.getItem('userData');
+        setIsLoading(true);
         
-        if (token && userData) {
-          setUser(JSON.parse(userData));
-          setIsAuthenticated(true);
+        // Load token from storage
+        const savedToken = await AsyncStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+        
+        if (savedToken) {
+          setToken(savedToken);
+          
+          // Load user data from storage
+          const savedUserData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+          
+          if (savedUserData) {
+            setUser(JSON.parse(savedUserData));
+          } else {
+            // If we have a token but no user data, clear token (inconsistent state)
+            await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+            setToken(null);
+          }
         }
-        
-        setIsLoading(false);
       } catch (error) {
-        console.error('Error checking login status:', error);
+        console.error('Error loading auth state:', error);
+        // If there's an error, clear auth state to be safe
+        await AsyncStorage.multiRemove([
+          STORAGE_KEYS.AUTH_TOKEN,
+          STORAGE_KEYS.USER_DATA,
+        ]);
+        setToken(null);
+        setUser(null);
+      } finally {
         setIsLoading(false);
       }
     };
-
-    checkLoginStatus();
+    
+    loadAuthState();
   }, []);
-
+  
+  // Login function
   const login = async (credentials) => {
     try {
       setIsLoading(true);
+      
+      // Call login API
       const response = await localAuthApi.login(credentials);
       
-      if (response.token) {
-        await AsyncStorage.setItem('userToken', response.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-        
-        setUser(response.user);
-        setIsAuthenticated(true);
-        return { success: true };
-      }
+      // Save token and user data
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
       
-      return { success: false, error: 'Invalid credentials' };
+      // Update state
+      setToken(response.token);
+      setUser(response.user);
+      
+      return response;
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error.message || 'Login failed' };
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
-
+  
+  // Register function
   const register = async (userData) => {
     try {
       setIsLoading(true);
+      
+      // Call register API
       const response = await localAuthApi.register(userData);
       
-      if (response.token) {
-        await AsyncStorage.setItem('userToken', response.token);
-        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
-        
-        setUser(response.user);
-        setIsAuthenticated(true);
-        return { success: true };
-      }
+      // Save token and user data
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, response.token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(response.user));
       
-      return { success: false, error: 'Registration failed' };
+      // Update state
+      setToken(response.token);
+      setUser(response.user);
+      
+      return response;
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: error.message || 'Registration failed' };
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
-
+  
+  // Logout function
   const logout = async () => {
     try {
       setIsLoading(true);
-      await localAuthApi.logout();
       
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
+      // Call logout API if we have a token
+      if (token) {
+        try {
+          await localAuthApi.logout();
+        } catch (error) {
+          console.error('Logout API error:', error);
+          // Continue with local logout even if API call fails
+        }
+      }
       
+      // Clear auth state from storage
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.AUTH_TOKEN,
+        STORAGE_KEYS.USER_DATA,
+      ]);
+      
+      // Clear state
+      setToken(null);
       setUser(null);
-      setIsAuthenticated(false);
-      return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
-      return { success: false, error: error.message || 'Logout failed' };
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
-
-  const updateProfile = async (profileData) => {
+  
+  // Update user data
+  const updateUser = async (updatedUserData) => {
     try {
-      setIsLoading(true);
-      // Here we would typically call an API endpoint to update the profile
-      // For now, we'll just update the local state and storage
+      // In a real app, you would call an API to update the user data
+      // For now, we'll just update local storage
       
-      const updatedUser = { ...user, ...profileData };
-      await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+      // Get current user data
+      const currentUserData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      const currentUser = currentUserData ? JSON.parse(currentUserData) : {};
       
-      setUser(updatedUser);
-      return { success: true };
+      // Merge with updated data
+      const newUserData = { ...currentUser, ...updatedUserData };
+      
+      // Save to storage
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(newUserData));
+      
+      // Update state
+      setUser(newUserData);
+      
+      return newUserData;
     } catch (error) {
-      console.error('Profile update error:', error);
-      return { success: false, error: error.message || 'Profile update failed' };
-    } finally {
-      setIsLoading(false);
+      console.error('Update user error:', error);
+      throw error;
     }
   };
-
+  
+  // Context value
+  const contextValue = {
+    user,
+    token,
+    isAuthenticated: !!token,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateUser,
+  };
+  
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        user,
-        isLoading,
-        login,
-        register,
-        logout,
-        updateProfile,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+// Custom hook to use the auth context
+export const useAuth = () => useContext(AuthContext);
+
+export default AuthContext;

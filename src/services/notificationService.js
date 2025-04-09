@@ -1,55 +1,39 @@
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { FEATURES } from '../constants/config';
-
-// Configure notifications
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
 
 /**
  * Register for push notifications
  * @returns {Boolean} true if permission was granted
  */
 export const registerNotifications = async () => {
-  if (!FEATURES.ENABLE_PUSH_NOTIFICATIONS) {
-    return false;
-  }
-  
   try {
-    // Check if we already have permission
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    // If we don't have permission yet, ask for it
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    
-    // If we still don't have permission, we can't send notifications
-    if (finalStatus !== 'granted') {
+    // Check if we're running on a physical device
+    if (!Constants.isDevice) {
+      console.log('Push notifications are not supported in the simulator');
       return false;
     }
     
-    // Get the token for this device
-    if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
-        name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#009688',
-      });
+    // Request permission to show notifications
+    const hasPermission = await requestNotificationPermissions();
+    
+    if (!hasPermission) {
+      console.log('Failed to get push token: Permission denied');
+      return false;
     }
+    
+    // Configure notification handling
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
     
     return true;
   } catch (error) {
-    console.error('Error requesting notification permissions:', error);
+    console.error('Error setting up notifications:', error);
     return false;
   }
 };
@@ -59,13 +43,17 @@ export const registerNotifications = async () => {
  * @returns {Boolean} true if permission was granted
  */
 export const requestNotificationPermissions = async () => {
-  if (!FEATURES.ENABLE_PUSH_NOTIFICATIONS) {
-    return false;
-  }
-  
   try {
-    const { status } = await Notifications.requestPermissionsAsync();
-    return status === 'granted';
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    
+    // If we don't have permission already, request it
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    
+    return finalStatus === 'granted';
   } catch (error) {
     console.error('Error requesting notification permissions:', error);
     return false;
@@ -82,21 +70,18 @@ export const requestNotificationPermissions = async () => {
  * @returns {String} Notification identifier
  */
 export const scheduleNotification = async ({ title, body, data = {}, trigger }) => {
-  if (!FEATURES.ENABLE_PUSH_NOTIFICATIONS) {
-    return null;
-  }
-  
   try {
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    const identifier = await Notifications.scheduleNotificationAsync({
       content: {
         title,
         body,
         data,
+        sound: true,
       },
       trigger,
     });
     
-    return notificationId;
+    return identifier;
   } catch (error) {
     console.error('Error scheduling notification:', error);
     return null;
@@ -114,16 +99,18 @@ export const scheduleNotification = async ({ title, body, data = {}, trigger }) 
  * @returns {String} Notification identifier
  */
 export const scheduleDailyReminder = async ({ title, body, data = {}, hour, minute }) => {
-  return scheduleNotification({
-    title,
-    body,
-    data,
-    trigger: {
+  try {
+    const trigger = {
       hour,
       minute,
       repeats: true,
-    },
-  });
+    };
+    
+    return await scheduleNotification({ title, body, data, trigger });
+  } catch (error) {
+    console.error('Error scheduling daily reminder:', error);
+    return null;
+  }
 };
 
 /**
@@ -132,36 +119,23 @@ export const scheduleDailyReminder = async ({ title, body, data = {}, hour, minu
  * @returns {String} Notification identifier
  */
 export const scheduleReminder = async (reminder) => {
-  if (!reminder || !reminder.title || !reminder.time) {
-    return null;
-  }
-  
   try {
-    // Parse time string (format: "HH:MM" or "HH:MM AM/PM")
-    let hour = 0;
-    let minute = 0;
+    // Extract time components from reminder.time (format: 'HH:MM')
+    const [hourStr, minuteStr] = reminder.time.split(':');
+    const hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
     
-    if (typeof reminder.time === 'string') {
-      const timeParts = reminder.time.match(/(\d+):(\d+)(?:\s*([AP]M))?/i);
-      
-      if (timeParts) {
-        hour = parseInt(timeParts[1], 10);
-        minute = parseInt(timeParts[2], 10);
-        
-        // Handle AM/PM
-        const period = timeParts[3]?.toUpperCase();
-        if (period === 'PM' && hour < 12) {
-          hour += 12;
-        } else if (period === 'AM' && hour === 12) {
-          hour = 0;
-        }
-      }
+    // Verify time components are valid
+    if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+      console.error('Invalid time format for reminder', reminder);
+      return null;
     }
     
-    return scheduleDailyReminder({
+    // Schedule the reminder
+    return await scheduleDailyReminder({
       title: reminder.title,
-      body: reminder.description || `Time to ${reminder.title.toLowerCase()}!`,
-      data: { type: reminder.type, id: reminder.id },
+      body: `Time to ${reminder.type === 'water' ? 'drink water!' : `track your ${reminder.type}!`}`,
+      data: { reminderId: reminder.id, type: reminder.type },
       hour,
       minute,
     });
@@ -176,8 +150,6 @@ export const scheduleReminder = async (reminder) => {
  * @param {String} notificationId Notification identifier
  */
 export const cancelNotification = async (notificationId) => {
-  if (!notificationId) return;
-  
   try {
     await Notifications.cancelScheduledNotificationAsync(notificationId);
   } catch (error) {
@@ -207,15 +179,4 @@ export const getAllScheduledNotifications = async () => {
     console.error('Error getting scheduled notifications:', error);
     return [];
   }
-};
-
-export default {
-  registerNotifications,
-  requestNotificationPermissions,
-  scheduleNotification,
-  scheduleDailyReminder,
-  scheduleReminder,
-  cancelNotification,
-  cancelAllNotifications,
-  getAllScheduledNotifications,
 };
