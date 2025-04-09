@@ -1,42 +1,30 @@
-import React, { useEffect } from 'react';
-import { StatusBar } from 'react-native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import React from 'react';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext';
 import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
-import { registerNotifications } from '../services/notificationService';
-
-const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
-  const { isAuthenticated, loading } = useAuth();
-  const { theme, isDarkMode } = useTheme();
-  
-  // Initialize notifications when the app loads
-  useEffect(() => {
-    registerNotifications();
-  }, []);
-  
-  // Update status bar based on theme
-  useEffect(() => {
-    StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
-  }, [isDarkMode]);
-  
-  if (loading) {
-    // Could return a splash screen or loading component here
-    return null;
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4285F4" />
+      </View>
+    );
   }
-  
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {isAuthenticated ? (
-        <Stack.Screen name="Main" component={MainNavigator} />
-      ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      )}
-    </Stack.Navigator>
-  );
+
+  return isAuthenticated ? <MainNavigator /> : <AuthNavigator />;
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+});
 
 export default AppNavigator;

@@ -1,147 +1,138 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { localAuthApi } from '../api/authApi';
-import { storageKeys } from '../services/storageService';
 
-// Create auth context
-const AuthContext = createContext();
+const AuthContext = createContext({
+  isAuthenticated: false,
+  user: null,
+  isLoading: true,
+  login: () => {},
+  register: () => {},
+  logout: () => {},
+  updateProfile: () => {},
+});
 
-// Context provider component
 export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Check if user is already logged in on mount
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const loadUser = async () => {
+    // Check if user is already logged in
+    const checkLoginStatus = async () => {
       try {
-        const storedUser = await AsyncStorage.getItem(storageKeys.USER);
-        const storedToken = await AsyncStorage.getItem(storageKeys.TOKEN);
+        const token = await AsyncStorage.getItem('userToken');
+        const userData = await AsyncStorage.getItem('userData');
         
-        if (storedUser && storedToken) {
-          setUser(JSON.parse(storedUser));
-          setToken(storedToken);
+        if (token && userData) {
+          setUser(JSON.parse(userData));
+          setIsAuthenticated(true);
         }
-      } catch (err) {
-        console.error('Error loading auth state:', err);
-      } finally {
-        setLoading(false);
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking login status:', error);
+        setIsLoading(false);
       }
     };
-    
-    loadUser();
+
+    checkLoginStatus();
   }, []);
-  
-  // Register a new user
-  const register = async (userData) => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const response = await localAuthApi.register(userData);
-      
-      if (response.user && response.token) {
-        await AsyncStorage.setItem(storageKeys.USER, JSON.stringify(response.user));
-        await AsyncStorage.setItem(storageKeys.TOKEN, response.token);
-        
-        setUser(response.user);
-        setToken(response.token);
-        return { success: true };
-      } else {
-        throw new Error('Registration failed');
-      }
-    } catch (err) {
-      setError(err.message || 'Registration failed');
-      return { success: false, error: err.message };
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Login user
+
   const login = async (credentials) => {
-    setLoading(true);
-    setError(null);
-    
     try {
+      setIsLoading(true);
       const response = await localAuthApi.login(credentials);
       
-      if (response.user && response.token) {
-        await AsyncStorage.setItem(storageKeys.USER, JSON.stringify(response.user));
-        await AsyncStorage.setItem(storageKeys.TOKEN, response.token);
+      if (response.token) {
+        await AsyncStorage.setItem('userToken', response.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
         
         setUser(response.user);
-        setToken(response.token);
+        setIsAuthenticated(true);
         return { success: true };
-      } else {
-        throw new Error('Login failed');
       }
-    } catch (err) {
-      setError(err.message || 'Login failed');
-      return { success: false, error: err.message };
+      
+      return { success: false, error: 'Invalid credentials' };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: error.message || 'Login failed' };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  // Logout user
-  const logout = async () => {
-    setLoading(true);
-    
+
+  const register = async (userData) => {
     try {
+      setIsLoading(true);
+      const response = await localAuthApi.register(userData);
+      
+      if (response.token) {
+        await AsyncStorage.setItem('userToken', response.token);
+        await AsyncStorage.setItem('userData', JSON.stringify(response.user));
+        
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      
+      return { success: false, error: 'Registration failed' };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return { success: false, error: error.message || 'Registration failed' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setIsLoading(true);
       await localAuthApi.logout();
       
-      // Clear storage and state
-      await AsyncStorage.removeItem(storageKeys.USER);
-      await AsyncStorage.removeItem(storageKeys.TOKEN);
+      await AsyncStorage.removeItem('userToken');
+      await AsyncStorage.removeItem('userData');
       
       setUser(null);
-      setToken(null);
+      setIsAuthenticated(false);
       return { success: true };
-    } catch (err) {
-      setError(err.message || 'Logout failed');
-      return { success: false, error: err.message };
+    } catch (error) {
+      console.error('Logout error:', error);
+      return { success: false, error: error.message || 'Logout failed' };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  // Update user profile
-  const updateProfile = async (userData) => {
-    setLoading(true);
-    setError(null);
-    
+
+  const updateProfile = async (profileData) => {
     try {
-      // In a real app, we would call an API here
-      // For now, we'll just update the local state
-      const updatedUser = { ...user, ...userData };
+      setIsLoading(true);
+      // Here we would typically call an API endpoint to update the profile
+      // For now, we'll just update the local state and storage
       
-      await AsyncStorage.setItem(storageKeys.USER, JSON.stringify(updatedUser));
+      const updatedUser = { ...user, ...profileData };
+      await AsyncStorage.setItem('userData', JSON.stringify(updatedUser));
+      
       setUser(updatedUser);
-      
       return { success: true };
-    } catch (err) {
-      setError(err.message || 'Profile update failed');
-      return { success: false, error: err.message };
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return { success: false, error: error.message || 'Profile update failed' };
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
+
   return (
     <AuthContext.Provider
       value={{
+        isAuthenticated,
         user,
-        token,
-        loading,
-        error,
-        register,
+        isLoading,
         login,
+        register,
         logout,
         updateProfile,
-        isAuthenticated: !!user && !!token,
       }}
     >
       {children}
@@ -149,15 +140,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 };
-
-export default AuthContext;
