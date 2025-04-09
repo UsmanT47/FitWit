@@ -1,0 +1,2 @@
+-- This is an empty SQL file that allows Drizzle to create the schema on first run
+-- Drizzle will automatically create the schema based on our schema definition
