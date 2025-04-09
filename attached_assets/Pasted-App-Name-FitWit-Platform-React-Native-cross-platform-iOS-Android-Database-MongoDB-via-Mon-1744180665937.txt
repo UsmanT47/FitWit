@@ -1,0 +1,87 @@
+App Name: FitWit
+Platform: React Native (cross-platform: iOS & Android)
+Database: MongoDB (via MongoDB Atlas or self-hosted)
+Core Concept:
+FitWit is a smart health journal app that allows users to log their daily food intake, mood, exercise, sleep, hydration, and other wellness-related data. Using AI, the app analyzes user behavior over time and offers personalized feedback, patterns, and suggestions — like “You feel tired when you skip breakfast” or “Your mood improves on workout days.”
+
+Key Features
+1. User Authentication
+Email/password signup & login
+
+Optional biometric authentication (Face ID / Fingerprint)
+
+2. Daily Logging System
+Food Intake: Log meals (breakfast, lunch, dinner, snacks) with time, quantity, calories (manual or using food database/API like Edamam or Nutritionix)
+
+Mood Tracker: Select mood from emojis or a slider + optional notes
+
+Exercise Tracker: Log workouts, duration, type (running, gym, yoga, etc.)
+
+Sleep Log: Track sleep duration, quality, bedtime, wake time
+
+Water Intake: Cups/glasses per day
+
+Custom Journals: Notes for symptoms, stress, medication, etc.
+
+3. AI Feedback Engine
+Collects and processes all user data to give:
+
+Correlation-based suggestions (e.g., “You sleep better on days you exercise”)
+
+Pattern spotting (e.g., “Low mood appears every Sunday evening”)
+
+Health reminders and nudges (e.g., “You skipped water logging today”)
+
+Uses NLP to interpret notes for emotional sentiment or habits
+
+Built with either a local ML model or a backend service (Node.js + AI model)
+
+4. Data Visualization
+Charts & graphs for calories, mood, steps, sleep over days/weeks/months
+
+Correlation matrix or timeline
+
+5. Smart Reminders & Notifications
+Reminders for meals, water, journaling, bedtime, exercise
+
+AI-suggested reminders based on past habits
+
+6. User Dashboard
+Summary of the day
+
+Weekly AI-generated insight cards
+
+Streaks and motivation badges
+
+7. Settings & Preferences
+Dark mode
+
+Notification controls
+
+Data privacy/export options
+
+Tech Stack
+Frontend: React Native, Expo or bare workflow
+
+Backend: Node.js + Express.js (or NestJS)
+
+Database: MongoDB Atlas
+
+Authentication: Firebase Auth or custom JWT system
+
+AI/ML Layer:
+
+Option 1: Use OpenRouter Api or similar LLMs via API to generate natural feedback
+
+State Management: Redux Toolkit / Zustand
+
+Storage: AsyncStorage for local, MongoDB for cloud
+
+Extra Features to Consider
+Barcode scanner for food logging
+
+Integration with Apple HealthKit / Google Fit
+
+Voice input for journaling
+
+AI chatbot assistant (“FitBuddy”) for real-time suggestions
