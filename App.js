@@ -1,12 +1,26 @@
-const React = require('react');
-const { View, Text } = require('react-native');
+// Using the most basic React Native approach
+import React from 'react';
+import { Text, View } from 'react-native';
 
-function App() {
+// No external imports, completely self-contained
+export default function App() {
+  // Simple inline styles, no StyleSheet
+  const containerStyle = {
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+  const textStyle = {
+    fontSize: 24,
+    fontWeight: 'bold',
+  };
+
+  // Most basic UI possible
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>FitWit Test App</Text>
+    <View style={containerStyle}>
+      <Text style={textStyle}>FitWit Test</Text>
     </View>
   );
 }
-
-module.exports = App;
