@@ -1,4 +1,4 @@
-import { API_URL } from '../constants/config';
+import { API_URL, ERROR_MESSAGES } from '../constants/config';
 
 /**
  * Register a new user
@@ -7,24 +7,25 @@ import { API_URL } from '../constants/config';
  */
 export const registerUser = async (userData) => {
   try {
-    const response = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    // In a real implementation, this would make an API call
+    console.log('Registering user:', userData);
+    
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Return mock response
+    return {
+      user: {
+        id: 1,
+        name: userData.name,
+        email: userData.email,
+        createdAt: new Date().toISOString(),
       },
-      body: JSON.stringify(userData),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Registration failed');
-    }
-    
-    return data;
+      token: 'mock-token-' + Date.now(),
+    };
   } catch (error) {
-    console.error('Registration API error:', error);
-    throw error;
+    console.error('Registration error:', error);
+    throw new Error(error.message || ERROR_MESSAGES.UNKNOWN);
   }
 };
 
@@ -35,24 +36,38 @@ export const registerUser = async (userData) => {
  */
 export const loginUser = async (credentials) => {
   try {
-    const response = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-    });
+    // In a real implementation, this would make an API call
+    console.log('Logging in user:', credentials.email);
     
-    const data = await response.json();
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
+    // Check credentials
+    if (credentials.email === 'test@example.com' && credentials.password === 'password') {
+      return {
+        user: {
+          id: 1,
+          name: 'Test User',
+          email: credentials.email,
+          createdAt: new Date().toISOString(),
+        },
+        token: 'mock-token-' + Date.now(),
+      };
     }
     
-    return data;
+    // Simulate successful login for any credentials (for demo purposes)
+    return {
+      user: {
+        id: 1,
+        name: 'Demo User',
+        email: credentials.email,
+        createdAt: new Date().toISOString(),
+      },
+      token: 'mock-token-' + Date.now(),
+    };
   } catch (error) {
-    console.error('Login API error:', error);
-    throw error;
+    console.error('Login error:', error);
+    throw new Error(error.message || ERROR_MESSAGES.UNKNOWN);
   }
 };
 
@@ -63,24 +78,20 @@ export const loginUser = async (credentials) => {
  */
 export const refreshToken = async (refreshToken) => {
   try {
-    const response = await fetch(`${API_URL}/auth/refresh-token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+    // In a real implementation, this would make an API call
+    console.log('Refreshing token');
     
-    const data = await response.json();
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    if (!response.ok) {
-      throw new Error(data.message || 'Token refresh failed');
-    }
-    
-    return data;
+    // Return mock response
+    return {
+      token: 'mock-token-' + Date.now(),
+      refreshToken: 'mock-refresh-token-' + Date.now(),
+    };
   } catch (error) {
-    console.error('Token refresh API error:', error);
-    throw error;
+    console.error('Token refresh error:', error);
+    throw new Error(error.message || ERROR_MESSAGES.UNKNOWN);
   }
 };
 
@@ -91,74 +102,33 @@ export const refreshToken = async (refreshToken) => {
  */
 export const logoutUser = async (token) => {
   try {
-    const response = await fetch(`${API_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
+    // In a real implementation, this would make an API call
+    console.log('Logging out user');
     
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Logout failed');
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Logout API error:', error);
-    throw error;
-  }
-};
-
-// Local implementation for testing/development without backend
-export const localAuthApi = {
-  async register(userData) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Validation
-    if (!userData.username || !userData.email || !userData.password) {
-      throw new Error('All fields are required');
-    }
-    
-    // Return mock response
-    return {
-      token: 'mock-jwt-token',
-      user: {
-        id: '1',
-        username: userData.username,
-        email: userData.email,
-      }
-    };
-  },
-  
-  async login(credentials) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Validation
-    if (!credentials.username || !credentials.password) {
-      throw new Error('Username and password are required');
-    }
-    
-    // For development, accept any credentials
-    return {
-      token: 'mock-jwt-token',
-      user: {
-        id: '1',
-        username: credentials.username,
-        email: 'user@example.com',
-      }
-    };
-  },
-  
-  async logout() {
-    // Simulate API delay
+    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Return mock response
-    return { message: 'Logged out successfully' };
+    return {
+      success: true,
+      message: 'Successfully logged out',
+    };
+  } catch (error) {
+    console.error('Logout error:', error);
+    throw new Error(error.message || ERROR_MESSAGES.UNKNOWN);
   }
+};
+
+export const localAuthApi = {
+  async register(userData) {
+    return registerUser(userData);
+  },
+  
+  async login(credentials) {
+    return loginUser(credentials);
+  },
+  
+  async logout() {
+    return logoutUser();
+  },
 };

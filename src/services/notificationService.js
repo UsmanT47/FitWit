@@ -11,12 +11,10 @@
  */
 export const registerNotifications = async () => {
   try {
-    // In a real app, we would use Expo Notifications
-    // For now, just return success
-    console.log('Registered for push notifications');
-    return true;
+    const hasPermission = await requestNotificationPermissions();
+    return hasPermission;
   } catch (error) {
-    console.error('Error registering for push notifications:', error);
+    console.error('Error registering notifications:', error);
     return false;
   }
 };
@@ -27,9 +25,8 @@ export const registerNotifications = async () => {
  */
 export const requestNotificationPermissions = async () => {
   try {
-    // In a real app, we would request permissions
-    // For now, just return success
-    console.log('Notification permissions requested');
+    // In a real implementation, this would request permissions from the user
+    // For now, simulate a successful permission grant
     return true;
   } catch (error) {
     console.error('Error requesting notification permissions:', error);
@@ -48,8 +45,8 @@ export const requestNotificationPermissions = async () => {
  */
 export const scheduleNotification = async ({ title, body, data = {}, trigger }) => {
   try {
-    // In a real app, we would schedule a notification
-    // For now, just log the notification details
+    // In a real implementation, this would schedule a notification via Expo Notifications
+    // For now, log the notification details and return a mock identifier
     console.log('Scheduled notification:', { title, body, data, trigger });
     return `notification-${Date.now()}`;
   } catch (error) {
@@ -70,8 +67,8 @@ export const scheduleNotification = async ({ title, body, data = {}, trigger }) 
  */
 export const scheduleDailyReminder = async ({ title, body, data = {}, hour, minute }) => {
   try {
-    // In a real app, we would schedule a daily reminder
-    // For now, just log the reminder details
+    // In a real implementation, this would schedule a daily recurring notification
+    // For now, log the reminder details and return a mock identifier
     console.log('Scheduled daily reminder:', { title, body, data, hour, minute });
     return `reminder-${Date.now()}`;
   } catch (error) {
@@ -86,20 +83,13 @@ export const scheduleDailyReminder = async ({ title, body, data = {}, hour, minu
  * @returns {String} Notification identifier
  */
 export const scheduleReminder = async (reminder) => {
+  const { title, message, time, type, recurrence } = reminder;
+  
   try {
-    // Convert time string to hour and minute
-    const [hour, minute] = reminder.time.split(':').map(Number);
-    
-    // Schedule the reminder
-    const notificationId = await scheduleDailyReminder({
-      title: reminder.title,
-      body: reminder.message,
-      data: { type: 'reminder', id: reminder.id },
-      hour,
-      minute,
-    });
-    
-    return notificationId;
+    // In a real implementation, this would schedule a reminder via Expo Notifications
+    // For now, log the reminder details and return a mock identifier
+    console.log('Scheduled reminder:', { title, message, time, type, recurrence });
+    return `reminder-${Date.now()}`;
   } catch (error) {
     console.error('Error scheduling reminder:', error);
     throw error;
@@ -112,8 +102,8 @@ export const scheduleReminder = async (reminder) => {
  */
 export const cancelNotification = async (notificationId) => {
   try {
-    // In a real app, we would cancel the notification
-    // For now, just log the cancellation
+    // In a real implementation, this would cancel a specific notification
+    // For now, log the cancellation
     console.log('Cancelled notification:', notificationId);
   } catch (error) {
     console.error('Error cancelling notification:', error);
@@ -126,8 +116,8 @@ export const cancelNotification = async (notificationId) => {
  */
 export const cancelAllNotifications = async () => {
   try {
-    // In a real app, we would cancel all notifications
-    // For now, just log the cancellation
+    // In a real implementation, this would cancel all notifications
+    // For now, log the cancellation
     console.log('Cancelled all notifications');
   } catch (error) {
     console.error('Error cancelling all notifications:', error);
@@ -141,12 +131,12 @@ export const cancelAllNotifications = async () => {
  */
 export const getAllScheduledNotifications = async () => {
   try {
-    // In a real app, we would get all scheduled notifications
-    // For now, just return an empty array
+    // In a real implementation, this would return all scheduled notifications
+    // For now, return an empty array
     return [];
   } catch (error) {
     console.error('Error getting scheduled notifications:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -156,35 +146,43 @@ export const getAllScheduledNotifications = async () => {
  */
 export const setupDefaultReminders = async () => {
   try {
-    // Schedule water reminder
+    // Water reminders
     await scheduleDailyReminder({
       title: 'Water Reminder',
-      body: 'Remember to drink water and stay hydrated!',
-      data: { type: 'reminder', category: 'water' },
-      hour: 10,
+      body: 'Time to drink some water! 💧',
+      data: { type: 'water' },
+      hour: 9,
       minute: 0,
     });
     
-    // Schedule exercise reminder
     await scheduleDailyReminder({
-      title: 'Movement Break',
-      body: 'Time to get up and move around for a few minutes!',
-      data: { type: 'reminder', category: 'exercise' },
+      title: 'Water Reminder',
+      body: 'Have you had enough water today? 💧',
+      data: { type: 'water' },
       hour: 14,
       minute: 0,
     });
     
-    // Schedule sleep reminder
+    // Log reminders
     await scheduleDailyReminder({
-      title: 'Bedtime Reminder',
-      body: 'Time to wind down and prepare for sleep.',
-      data: { type: 'reminder', category: 'sleep' },
-      hour: 21,
-      minute: 0,
+      title: 'Time to log your meals',
+      body: "Don't forget to log your food for the day! 🍎",
+      data: { type: 'food' },
+      hour: 19,
+      minute: 30,
     });
     
-    console.log('Default reminders set up');
+    await scheduleDailyReminder({
+      title: 'Sleep log reminder',
+      body: 'How did you sleep last night? Tap to log your sleep. 😴',
+      data: { type: 'sleep' },
+      hour: 8,
+      minute: 30,
+    });
+    
+    console.log('Default reminders set up successfully');
   } catch (error) {
     console.error('Error setting up default reminders:', error);
+    throw error;
   }
 };

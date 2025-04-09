@@ -1,12 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '../context/ThemeContext';
-
-// Import log screens
 import LogHomeScreen from '../screens/log/LogHomeScreen';
-import FoodLogScreen from '../screens/log/FoodLogScreen';
-import WaterLogScreen from '../screens/log/WaterLogScreen';
-import MoodLogScreen from '../screens/log/MoodLogScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -21,81 +16,64 @@ const LogNavigator = () => {
     <Stack.Navigator
       initialRouteName="LogHome"
       screenOptions={{
-        headerBackTitle: 'Back',
+        headerShown: true,
+        headerTitleStyle: {
+          color: theme.text.primary,
+          fontWeight: '600',
+          fontSize: 18,
+        },
         headerStyle: {
           backgroundColor: theme.background.primary,
         },
-        headerTitleStyle: {
-          color: theme.text.primary,
-        },
         headerTintColor: theme.primary.main,
+        contentStyle: { backgroundColor: theme.background.primary },
       }}
     >
-      <Stack.Screen 
-        name="LogHome" 
-        component={LogHomeScreen} 
-        options={{ 
+      <Stack.Screen
+        name="LogHome"
+        component={LogHomeScreen}
+        options={{
           title: 'Health Log',
           headerLargeTitle: true,
         }}
       />
       
-      <Stack.Screen 
-        name="FoodLog" 
-        component={FoodLogScreen} 
-        options={{ 
-          title: 'Food Log',
-        }}
+      {/* Placeholder screens until we create them */}
+      <Stack.Screen
+        name="FoodLog"
+        component={LogHomeScreen}
+        options={{ title: 'Food Log' }}
       />
       
-      <Stack.Screen 
-        name="WaterLog" 
-        component={WaterLogScreen} 
-        options={{ 
-          title: 'Water Log',
-        }}
+      <Stack.Screen
+        name="WaterLog"
+        component={LogHomeScreen}
+        options={{ title: 'Water Log' }}
       />
       
-      <Stack.Screen 
-        name="MoodLog" 
-        component={MoodLogScreen} 
-        options={{ 
-          title: 'Mood Log',
-        }}
-      />
-      
-      {/* Additional log screens will be added here as they are developed */}
-      {/* 
-      <Stack.Screen 
-        name="ExerciseLog" 
-        component={ExerciseLogScreen} 
+      <Stack.Screen
+        name="ExerciseLog"
+        component={LogHomeScreen}
         options={{ title: 'Exercise Log' }}
       />
       
-      <Stack.Screen 
-        name="SleepLog" 
-        component={SleepLogScreen} 
+      <Stack.Screen
+        name="SleepLog"
+        component={LogHomeScreen}
         options={{ title: 'Sleep Log' }}
       />
       
-      <Stack.Screen 
-        name="HealthLog" 
-        component={HealthLogScreen} 
+      <Stack.Screen
+        name="MoodLog"
+        component={LogHomeScreen}
+        options={{ title: 'Mood Log' }}
+      />
+      
+      <Stack.Screen
+        name="HealthLog"
+        component={LogHomeScreen}
         options={{ title: 'Health Metrics' }}
       />
-      
-      <Stack.Screen 
-        name="ScanBarcode" 
-        component={BarcodeScannerScreen} 
-        options={{ title: 'Scan Food Barcode' }}
-      />
-      
-      <Stack.Screen 
-        name="VoiceInput" 
-        component={VoiceInputScreen} 
-        options={{ title: 'Voice Input' }}
-      />
-      */}
     </Stack.Navigator>
   );
 };

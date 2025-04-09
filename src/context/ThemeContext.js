@@ -1,12 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
-
-// Import theme constants
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightTheme, darkTheme } from '../constants/colors';
-import { STORAGE_KEYS, THEMES } from '../constants/config';
+import { THEMES, STORAGE_KEYS } from '../constants/config';
 
-// Create theme context
+// Create the context
 const ThemeContext = createContext();
 
 /**
@@ -14,78 +12,61 @@ const ThemeContext = createContext();
  * Handles theme management and persistence
  */
 export const ThemeProvider = ({ children }) => {
-  // Get device color scheme
-  const deviceColorScheme = useColorScheme();
-  
-  // Initial theme state
+  const deviceTheme = useColorScheme();
   const [themeMode, setThemeMode] = useState(THEMES.SYSTEM);
-  const [theme, setTheme] = useState(deviceColorScheme === 'dark' ? darkTheme : lightTheme);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Load saved theme mode from storage
+  // Determine the actual theme based on the mode and device theme
+  const isDarkMode = 
+    themeMode === THEMES.SYSTEM 
+      ? deviceTheme === 'dark'
+      : themeMode === THEMES.DARK;
+  
+  const theme = isDarkMode ? darkTheme : lightTheme;
+  
+  // Load the saved theme mode on initial render
   useEffect(() => {
-    const loadThemeMode = async () => {
+    const loadTheme = async () => {
       try {
         const savedThemeMode = await AsyncStorage.getItem(STORAGE_KEYS.THEME_MODE);
-        
         if (savedThemeMode) {
           setThemeMode(savedThemeMode);
-          
-          // Apply the saved theme
-          if (savedThemeMode === THEMES.DARK) {
-            setTheme(darkTheme);
-          } else if (savedThemeMode === THEMES.LIGHT) {
-            setTheme(lightTheme);
-          } else {
-            // For 'system', use device theme
-            setTheme(deviceColorScheme === 'dark' ? darkTheme : lightTheme);
-          }
         }
       } catch (error) {
-        console.error('Error loading theme mode:', error);
+        console.error('Failed to load theme:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    loadThemeMode();
-  }, [deviceColorScheme]);
+    loadTheme();
+  }, []);
   
-  // Handle theme mode changes
-  const handleSetThemeMode = async (mode) => {
-    try {
-      // Save theme mode to storage
-      await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
-      
-      // Update state
-      setThemeMode(mode);
-      
-      // Apply the new theme
-      if (mode === THEMES.DARK) {
-        setTheme(darkTheme);
-      } else if (mode === THEMES.LIGHT) {
-        setTheme(lightTheme);
-      } else {
-        // For 'system', use device theme
-        setTheme(deviceColorScheme === 'dark' ? darkTheme : lightTheme);
+  // Save the theme mode whenever it changes
+  useEffect(() => {
+    const saveTheme = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, themeMode);
+      } catch (error) {
+        console.error('Failed to save theme:', error);
       }
-    } catch (error) {
-      console.error('Error saving theme mode:', error);
+    };
+    
+    if (!isLoading) {
+      saveTheme();
     }
-  };
+  }, [themeMode, isLoading]);
   
-  // Determine if dark mode is active
-  const isDarkMode = 
-    themeMode === THEMES.DARK || 
-    (themeMode === THEMES.SYSTEM && deviceColorScheme === 'dark');
-  
-  // Context value
-  const contextValue = {
+  const value = {
     theme,
-    themeMode,
-    setThemeMode: handleSetThemeMode,
     isDarkMode,
+    themeMode,
+    setThemeMode,
+    isLoading,
   };
   
   return (
-    <ThemeContext.Provider value={contextValue}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );
@@ -97,10 +78,8 @@ export const ThemeProvider = ({ children }) => {
  */
 export const useTheme = () => {
   const context = useContext(ThemeContext);
-  
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
-  
   return context;
 };

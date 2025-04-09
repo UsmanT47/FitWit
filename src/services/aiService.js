@@ -1,44 +1,16 @@
 /**
  * AI service for generating insights and recommendations
  */
-import { getUserData } from './storageService';
-import { formatDate } from '../utils/dateUtils';
+import { FEATURES } from '../constants/config';
 
 /**
  * Generate AI insights from user health data
  * @returns {Array} Array of insight objects
  */
 export const getAllInsights = async () => {
-  try {
-    // Get user data
-    const userData = await getUserData();
-    
-    // Check if there's enough data for meaningful analysis
-    if (!hasEnoughDataForAnalysis(userData)) {
-      return getSampleInsights();
-    }
-    
-    // In a real implementation, we'd send the data to an AI service
-    // For now, return sample insights
-    const insights = [
-      // Sleep-mood correlation insight
-      analyzeSleepMoodCorrelation(userData.sleep, userData.mood),
-      
-      // Exercise-mood correlation insight
-      analyzeExerciseMoodCorrelation(userData.exercise, userData.mood),
-      
-      // Water intake pattern insight
-      analyzeWaterIntakePatterns(userData.water),
-      
-      // Additional sample insights
-      ...getSampleInsights().slice(0, 2),
-    ].filter(Boolean); // Remove any null insights
-    
-    return insights.length > 0 ? insights : getSampleInsights();
-  } catch (error) {
-    console.error('Error generating insights:', error);
-    return getSampleInsights();
-  }
+  // In a real implementation, this would make an API call to an AI service
+  // For now, return sample insights
+  return getSampleInsights();
 };
 
 /**
@@ -46,25 +18,9 @@ export const getAllInsights = async () => {
  * @returns {Object} Newly generated insight
  */
 export const generateNewInsight = async () => {
-  try {
-    // Get user data
-    const userData = await getUserData();
-    
-    // In a real implementation, we'd send the data to an AI service
-    // For now, return a random sample insight
-    const sampleInsights = getSampleInsights();
-    const randomIndex = Math.floor(Math.random() * sampleInsights.length);
-    const insight = sampleInsights[randomIndex];
-    
-    // Add a timestamp
-    return {
-      ...insight,
-      createdAt: new Date().toISOString(),
-    };
-  } catch (error) {
-    console.error('Error generating new insight:', error);
-    return getSampleInsights()[0];
-  }
+  // In a real implementation, this would make an API call to an AI service
+  // For now, return a sample insight
+  return generateSampleInsight();
 };
 
 /**
@@ -72,32 +28,17 @@ export const generateNewInsight = async () => {
  * @returns {Array} Array of insight objects for the dashboard
  */
 export const generateDailyInsight = async () => {
-  try {
-    // Get user data
-    const userData = await getUserData();
-    
-    // Check if there's enough data
-    if (!hasEnoughDataForAnalysis(userData)) {
-      return [getSampleInsights()[0]];
+  // In a real implementation, this would make an API call to an AI service
+  // For now, return a sample daily insight
+  return [
+    {
+      id: 'daily-1',
+      type: 'general',
+      title: 'Daily Tip',
+      content: 'Try to move for at least 30 minutes today to improve your energy levels and mood.',
+      createdAt: new Date().toISOString(),
     }
-    
-    // In a real implementation, we'd use the OpenAI API to generate personalized insights
-    // For now, return a sample insight for the dashboard
-    const dailyInsights = [
-      {
-        id: 'daily-1',
-        title: 'Daily Wellness Tip',
-        content: 'Based on your recent activity patterns, try to incorporate a 10-minute stretching session in the morning to improve flexibility and reduce muscle tension.',
-        type: 'general',
-        createdAt: new Date().toISOString(),
-      }
-    ];
-    
-    return dailyInsights;
-  } catch (error) {
-    console.error('Error generating daily insight:', error);
-    return [getSampleInsights()[0]];
-  }
+  ];
 };
 
 /**
@@ -106,16 +47,9 @@ export const generateDailyInsight = async () => {
  * @returns {Boolean} True if enough data exists
  */
 const hasEnoughDataForAnalysis = (data) => {
-  // Check if there are enough data points for analysis
-  const totalEntries = 
-    data.food.length +
-    data.water.length + 
-    data.exercise.length +
-    data.sleep.length +
-    data.mood.length;
-  
-  // Require at least 5 entries for meaningful analysis
-  return totalEntries >= 5;
+  // In a real implementation, this would check if there's enough data
+  // For now, always return true
+  return true;
 };
 
 /**
@@ -125,16 +59,13 @@ const hasEnoughDataForAnalysis = (data) => {
  * @returns {Object|null} Insight object or null if no pattern found
  */
 const analyzeSleepMoodCorrelation = (sleepData, moodData) => {
-  // Mock implementation - in a real app, this would perform actual analysis
-  if (sleepData.length < 3 || moodData.length < 3) {
-    return null;
-  }
-  
+  // In a real implementation, this would analyze the correlation
+  // For now, return a sample insight
   return {
     id: 'sleep-mood-1',
-    title: 'Sleep Quality Affects Your Mood',
-    content: 'We\'ve noticed that on days when you sleep more than 7 hours, you tend to report a more positive mood the following day. Maintaining consistent sleep patterns could help improve your overall well-being.',
     type: 'sleep',
+    title: 'Sleep and Mood Connection',
+    content: 'Your mood tends to be better on days following 7+ hours of sleep. Consider maintaining a consistent sleep schedule to improve your overall well-being.',
     createdAt: new Date().toISOString(),
   };
 };
@@ -146,16 +77,13 @@ const analyzeSleepMoodCorrelation = (sleepData, moodData) => {
  * @returns {Object|null} Insight object or null if no pattern found
  */
 const analyzeExerciseMoodCorrelation = (exerciseData, moodData) => {
-  // Mock implementation - in a real app, this would perform actual analysis
-  if (exerciseData.length < 3 || moodData.length < 3) {
-    return null;
-  }
-  
+  // In a real implementation, this would analyze the correlation
+  // For now, return a sample insight
   return {
     id: 'exercise-mood-1',
-    title: 'Exercise Boosts Your Mood',
-    content: 'Your mood logs show improvement on days when you exercise. Even short 15-minute sessions appear to have a positive impact on your emotional well-being. Consider adding brief workouts on busy days.',
     type: 'exercise',
+    title: 'Exercise Boosts Your Mood',
+    content: 'You reported higher mood ratings on days with moderate physical activity. Try to incorporate at least 20 minutes of exercise into your daily routine.',
     createdAt: new Date().toISOString(),
   };
 };
@@ -165,17 +93,14 @@ const analyzeExerciseMoodCorrelation = (exerciseData, moodData) => {
  * @param {Array} waterData Array of water intake records
  * @returns {Object|null} Insight object or null if no pattern found
  */
-const analyzeWaterIntakePatterns = (waterData) => {
-  // Mock implementation - in a real app, this would perform actual analysis
-  if (waterData.length < 3) {
-    return null;
-  }
-  
+const analyzeWaterIntake = (waterData) => {
+  // In a real implementation, this would analyze water intake patterns
+  // For now, return a sample insight
   return {
     id: 'hydration-1',
-    title: 'Morning Hydration Matters',
-    content: "Your data suggests that you are consuming most of your daily water in the afternoon. Try starting your day with a glass of water to help jumpstart your metabolism and improve energy levels throughout the day.",
     type: 'hydration',
+    title: 'Stay Hydrated',
+    content: 'Your water intake is lower in the morning. Try keeping a water bottle on your nightstand and drinking a glass of water right after waking up.',
     createdAt: new Date().toISOString(),
   };
 };
@@ -185,47 +110,45 @@ const analyzeWaterIntakePatterns = (waterData) => {
  * @returns {Object} Sample insight
  */
 const generateSampleInsight = () => {
-  const insightTypes = ['general', 'nutrition', 'exercise', 'sleep', 'mood', 'hydration'];
-  const randomType = insightTypes[Math.floor(Math.random() * insightTypes.length)];
+  const insights = [
+    {
+      id: `nutrition-${Date.now()}`,
+      type: 'nutrition',
+      title: 'Balanced Nutrition',
+      content: 'Your diet has been well-balanced over the past week. Keep incorporating a variety of fruits and vegetables for optimal health benefits.',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `exercise-${Date.now()}`,
+      type: 'exercise',
+      title: 'Consistency is Key',
+      content: "You've been consistent with your workouts lately. This steady approach is more beneficial for long-term fitness than occasional intense sessions.",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `sleep-${Date.now()}`,
+      type: 'sleep',
+      title: 'Sleep Schedule',
+      content: 'Your sleep pattern shows variability on weekends. Try to maintain a consistent sleep schedule even on weekends for better sleep quality.',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `mood-${Date.now()}`,
+      type: 'mood',
+      title: 'Mood Patterns',
+      content: 'Your mood tends to dip in the mid-afternoon. Consider taking short breaks or doing quick exercises during this time to boost your energy and mood.',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `hydration-${Date.now()}`,
+      type: 'hydration',
+      title: 'Hydration Reminder',
+      content: 'Your water intake decreases significantly in the afternoon. Set reminders to help you maintain consistent hydration throughout the day.',
+      createdAt: new Date().toISOString(),
+    },
+  ];
   
-  // Generate a random ID
-  const id = `sample-${Date.now()}`;
-  
-  // Insights by type
-  const insights = {
-    general: {
-      title: 'Establish a Morning Routine',
-      content: 'Creating a consistent morning routine can set a positive tone for your day. Consider incorporating meditation, hydration, and light stretching to start your day mindfully.',
-    },
-    nutrition: {
-      title: 'Protein and Energy Levels',
-      content: 'Based on your food logs, you may benefit from including more protein in your breakfast. This could help maintain steady energy levels throughout the morning.',
-    },
-    exercise: {
-      title: 'Find Your Optimal Exercise Time',
-      content: 'Your workout logs show better consistency when you exercise in the evening. Consider scheduling your workouts when you naturally have more energy for better adherence.',
-    },
-    sleep: {
-      title: 'Create a Sleep Wind-Down Routine',
-      content: 'Your sleep data suggests irregular bedtimes. Creating a 30-minute wind-down routine before bed could help improve your sleep quality and make it easier to fall asleep.',
-    },
-    mood: {
-      title: 'Social Interaction and Mood',
-      content: 'Days when you engage in social activities correlate with more positive mood entries. Consider incorporating regular social connections into your weekly routine.',
-    },
-    hydration: {
-      title: 'Hydration and Energy',
-      content: 'Meeting your water intake goals appears to correlate with higher reported energy levels. Try keeping a water bottle visible as a reminder to stay hydrated throughout the day.',
-    },
-  };
-  
-  return {
-    id,
-    title: insights[randomType].title,
-    content: insights[randomType].content,
-    type: randomType,
-    createdAt: new Date().toISOString(),
-  };
+  return insights[Math.floor(Math.random() * insights.length)];
 };
 
 /**
@@ -235,39 +158,39 @@ const generateSampleInsight = () => {
 const getSampleInsights = () => {
   return [
     {
-      id: 'sample-1',
-      title: 'Balance Your Nutrition',
-      content: 'Your food logs show a good intake of protein, but you might benefit from adding more variety of vegetables to get a wider range of nutrients. Aim for 5 different colored vegetables daily.',
-      type: 'nutrition',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-    },
-    {
-      id: 'sample-2',
-      title: 'Optimize Your Sleep Schedule',
-      content: 'Your sleep data suggests that you get the most restful sleep when you go to bed before 11 PM. Try maintaining a consistent bedtime to improve your sleep quality and morning energy levels.',
+      id: 'sleep-1',
       type: 'sleep',
-      createdAt: new Date(Date.now() - 86400000 * 4).toISOString(), // 4 days ago
+      title: 'Improve Sleep Quality',
+      content: 'You average 6.5 hours of sleep on weeknights, which is below the recommended 7-8 hours. Consider going to bed 30 minutes earlier to improve your sleep quality and energy levels.',
+      createdAt: new Date(Date.now() - 86400000).toISOString(), // yesterday
     },
     {
-      id: 'sample-3',
-      title: 'Exercise Recovery Pattern',
-      content: 'We noticed that you tend to skip exercise after high-intensity workout days. Consider adding light recovery activities like yoga or walking on the day after intense workouts instead of taking a complete rest day.',
+      id: 'nutrition-1',
+      type: 'nutrition',
+      title: 'Protein Intake',
+      content: 'Your protein intake has been below your target for the past week. Consider adding more lean protein sources like chicken, fish, tofu, or legumes to your meals.',
+      createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+    },
+    {
+      id: 'exercise-1',
       type: 'exercise',
-      createdAt: new Date(Date.now() - 86400000 * 7).toISOString(), // 7 days ago
+      title: 'Activity Pattern',
+      content: "You're most active on Tuesdays and Thursdays. Try spreading your workouts more evenly throughout the week for more consistent energy levels and better recovery.",
+      createdAt: new Date(Date.now() - 259200000).toISOString() // 3 days ago
     },
     {
-      id: 'sample-4',
-      title: 'Midday Energy Dip',
-      content: 'Your mood and energy logs show a consistent dip in the mid-afternoon. Try having a small protein-rich snack and a short walk around 2-3 PM to maintain your energy levels throughout the day.',
-      type: 'mood',
-      createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), // 10 days ago
-    },
-    {
-      id: 'sample-5',
-      title: 'Hydration and Headaches',
-      content: 'There appears to be a correlation between days when you drink less water and reported headaches in your health logs. Try to maintain consistent water intake throughout the day, especially during busy periods.',
+      id: 'hydration-1',
       type: 'hydration',
-      createdAt: new Date(Date.now() - 86400000 * 14).toISOString(), // 14 days ago
+      title: 'Morning Hydration',
+      content: 'You consistently drink less water before noon. Try keeping a water bottle at your desk and setting reminders to drink throughout the morning.',
+      createdAt: new Date(Date.now() - 345600000).toISOString(), // 4 days ago
+    },
+    {
+      id: 'mood-1',
+      type: 'mood',
+      title: 'Mood and Exercise',
+      content: 'Your mood ratings are consistently higher on days when you exercise. Even a short 15-minute walk could help boost your mood on busy days.',
+      createdAt: new Date(Date.now() - 432000000).toISOString(), // 5 days ago
     },
   ];
 };

@@ -1,9 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { BOTTOM_TAB_HEIGHT } from '../constants/dimensions';
 import { useTheme } from '../context/ThemeContext';
-
-// Import screens and navigators
 import DashboardScreen from '../screens/main/DashboardScreen';
 import InsightsScreen from '../screens/main/InsightsScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
@@ -27,12 +26,14 @@ const MainNavigator = () => {
         tabBarInactiveTintColor: theme.text.tertiary,
         tabBarStyle: {
           backgroundColor: theme.background.primary,
-          borderTopWidth: 1,
           borderTopColor: theme.border,
+          height: BOTTOM_TAB_HEIGHT,
+          paddingBottom: 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          marginBottom: 4,
+          fontWeight: '500',
         },
       }}
     >
@@ -40,10 +41,13 @@ const MainNavigator = () => {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={size}
+              color={color}
+            />
           ),
-          tabBarLabel: 'Home',
         }}
       />
       
@@ -51,10 +55,13 @@ const MainNavigator = () => {
         name="Log"
         component={LogNavigator}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'add-circle' : 'add-circle-outline'}
+              size={size + 4}
+              color={color}
+            />
           ),
-          tabBarLabel: 'Log',
         }}
       />
       
@@ -62,10 +69,13 @@ const MainNavigator = () => {
         name="Insights"
         component={InsightsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="analytics-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'bar-chart' : 'bar-chart-outline'}
+              size={size}
+              color={color}
+            />
           ),
-          tabBarLabel: 'Insights',
         }}
       />
       
@@ -73,10 +83,13 @@ const MainNavigator = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ focused, color, size }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={size}
+              color={color}
+            />
           ),
-          tabBarLabel: 'Profile',
         }}
       />
     </Tab.Navigator>

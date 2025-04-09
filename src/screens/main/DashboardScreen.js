@@ -3,417 +3,336 @@ import {
   View, 
   Text, 
   StyleSheet, 
+  SafeAreaView, 
   ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  RefreshControl
+  TouchableOpacity,
+  RefreshControl 
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { SPACING, FONT_SIZES } from '../../constants/dimensions';
-import { formatDate } from '../../utils/dateUtils';
-import { Ionicons } from '@expo/vector-icons';
-import { getUserData } from '../../services/storageService';
 import { generateDailyInsight } from '../../services/aiService';
 
-const DashboardScreen = ({ navigation }) => {
+const DashboardScreen = () => {
   const { theme } = useTheme();
   const { user } = useAuth();
-  
-  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [userData, setUserData] = useState({
-    food: [],
-    mood: [],
-    exercise: [],
-    sleep: [],
-    water: { glasses: 0, goal: 8 },
-    date: formatDate(new Date()),
-  });
   const [insights, setInsights] = useState([]);
+  const [todayStats, setTodayStats] = useState({
+    water: { current: 750, goal: 2000 }, // ml
+    steps: { current: 4320, goal: 10000 },
+    calories: { current: 1200, goal: 2000 },
+    sleep: { current: 7, goal: 8 }, // hours
+  });
   
-  // Load user data and insights on mount
   useEffect(() => {
-    loadData();
+    loadInsights();
   }, []);
   
-  // Load user data and insights
-  const loadData = async () => {
+  const loadInsights = async () => {
     try {
-      setIsLoading(true);
-      
-      // Get today's data
-      const data = await getUserData();
-      setUserData({
-        ...data,
-        water: data.water[0] || { glasses: 0, goal: 8 }
-      });
-      
-      // Get insights
       const dailyInsights = await generateDailyInsight();
       setInsights(dailyInsights);
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error loading insights:', error);
     }
   };
   
-  // Handle pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
+    try {
+      await loadInsights();
+    } finally {
+      setRefreshing(false);
+    }
   };
   
-  // Calculate completion percentage
-  const calculateCompletionPercentage = () => {
-    let completed = 0;
-    let total = 5; // Food, water, exercise, sleep, mood
-    
-    if (userData.food.length > 0) completed++;
-    if (userData.water && userData.water.glasses > 0) completed++;
-    if (userData.exercise.length > 0) completed++;
-    if (userData.sleep.length > 0) completed++;
-    if (userData.mood.length > 0) completed++;
-    
-    return Math.round((completed / total) * 100);
+  const getTimeOfDay = () => {
+    const hours = new Date().getHours();
+    if (hours < 12) return 'Morning';
+    if (hours < 18) return 'Afternoon';
+    return 'Evening';
   };
   
-  // Navigate to log screen
-  const navigateToLog = (logType) => {
-    navigation.navigate('Log', { screen: `${logType}Log` });
+  const renderProgressBar = (current, goal, color) => {
+    const progress = Math.min(current / goal, 1);
+    return (
+      <View style={styles.progressBarContainer}>
+        <View 
+          style={[
+            styles.progressBar, 
+            { backgroundColor: theme.background.tertiary }
+          ]}
+        >
+          <View 
+            style={[
+              styles.progress, 
+              { 
+                width: `${progress * 100}%`,
+                backgroundColor: color
+              }
+            ]}
+          />
+        </View>
+        <Text style={[styles.progressText, { color: theme.text.primary }]}>
+          {current}/{goal}
+        </Text>
+      </View>
+    );
   };
   
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.background.primary }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[theme.primary.main]}
-          tintColor={theme.primary.main}
-        />
-      }
-    >
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.primary.main} />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
+      
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={[styles.greeting, { color: theme.text.primary }]}>
+              Good {getTimeOfDay()}, {user?.name || 'Friend'}!
+            </Text>
+            <Text style={[styles.date, { color: theme.text.secondary }]}>
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={[styles.profileButton, { backgroundColor: theme.background.secondary }]}
+          >
+            <Text style={[styles.profileInitial, { color: theme.primary.main }]}>
+              {user?.name?.charAt(0) || 'U'}
+            </Text>
+          </TouchableOpacity>
         </View>
-      ) : (
-        <>
-          {/* Welcome Section */}
-          <View style={styles.welcomeSection}>
-            <View>
-              <Text style={[styles.welcomeText, { color: theme.text.primary }]}>
-                Hello, {user?.username || 'there'}!
-              </Text>
-              <Text style={[styles.dateText, { color: theme.text.secondary }]}>
-                {formatDate(new Date(), 'EEEE, MMMM d')}
-              </Text>
+        
+        {/* Today's Stats */}
+        <View style={[styles.statsCard, { backgroundColor: theme.background.secondary }]}>
+          <Text style={[styles.cardTitle, { color: theme.text.primary }]}>Today's Progress</Text>
+          
+          <View style={styles.statItem}>
+            <View style={styles.statHeader}>
+              <Ionicons name="water-outline" size={20} color={theme.info.main} />
+              <Text style={[styles.statTitle, { color: theme.text.primary }]}>Water</Text>
             </View>
-            <View 
-              style={[
-                styles.completionBadge, 
-                { backgroundColor: theme.primary.light }
-              ]}
-            >
-              <Text style={[styles.completionText, { color: theme.primary.contrast }]}>
-                {calculateCompletionPercentage()}% Complete
-              </Text>
+            {renderProgressBar(todayStats.water.current, todayStats.water.goal, theme.info.main)}
+          </View>
+          
+          <View style={styles.statItem}>
+            <View style={styles.statHeader}>
+              <Ionicons name="footsteps-outline" size={20} color={theme.success.main} />
+              <Text style={[styles.statTitle, { color: theme.text.primary }]}>Steps</Text>
             </View>
+            {renderProgressBar(todayStats.steps.current, todayStats.steps.goal, theme.success.main)}
           </View>
           
-          {/* Quick Actions */}
-          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-            Quick Log
-          </Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { backgroundColor: theme.background.secondary }]}
-              onPress={() => navigateToLog('Food')}
-            >
-              <Ionicons name="restaurant-outline" size={24} color={theme.text.primary} />
-              <Text style={[styles.quickActionText, { color: theme.text.secondary }]}>Food</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { backgroundColor: theme.background.secondary }]}
-              onPress={() => navigateToLog('Water')}
-            >
-              <Ionicons name="water-outline" size={24} color={theme.text.primary} />
-              <Text style={[styles.quickActionText, { color: theme.text.secondary }]}>Water</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { backgroundColor: theme.background.secondary }]}
-              onPress={() => navigateToLog('Exercise')}
-            >
-              <Ionicons name="fitness-outline" size={24} color={theme.text.primary} />
-              <Text style={[styles.quickActionText, { color: theme.text.secondary }]}>Exercise</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { backgroundColor: theme.background.secondary }]}
-              onPress={() => navigateToLog('Sleep')}
-            >
-              <Ionicons name="bed-outline" size={24} color={theme.text.primary} />
-              <Text style={[styles.quickActionText, { color: theme.text.secondary }]}>Sleep</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.quickActionButton, { backgroundColor: theme.background.secondary }]}
-              onPress={() => navigateToLog('Mood')}
-            >
-              <Ionicons name="happy-outline" size={24} color={theme.text.primary} />
-              <Text style={[styles.quickActionText, { color: theme.text.secondary }]}>Mood</Text>
-            </TouchableOpacity>
+          <View style={styles.statItem}>
+            <View style={styles.statHeader}>
+              <Ionicons name="flame-outline" size={20} color={theme.error.main} />
+              <Text style={[styles.statTitle, { color: theme.text.primary }]}>Calories</Text>
+            </View>
+            {renderProgressBar(todayStats.calories.current, todayStats.calories.goal, theme.error.main)}
           </View>
           
-          {/* Today's Summary */}
-          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-            Today's Summary
-          </Text>
-          <View style={[styles.summaryCard, { backgroundColor: theme.background.secondary }]}>
-            {userData.food.length > 0 ? (
-              <View style={styles.summaryItem}>
-                <Ionicons name="restaurant" size={20} color={theme.text.primary} />
-                <Text style={[styles.summaryText, { color: theme.text.primary }]}>
-                  {userData.food.length} meals logged
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.summaryItem}>
-                <Ionicons name="restaurant-outline" size={20} color={theme.text.tertiary} />
-                <Text style={[styles.summaryText, { color: theme.text.tertiary }]}>
-                  No meals logged
-                </Text>
-              </View>
-            )}
-            
-            {userData.water && userData.water.glasses > 0 ? (
-              <View style={styles.summaryItem}>
-                <Ionicons name="water" size={20} color={theme.text.primary} />
-                <Text style={[styles.summaryText, { color: theme.text.primary }]}>
-                  {userData.water.glasses} / {userData.water.goal} glasses of water
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.summaryItem}>
-                <Ionicons name="water-outline" size={20} color={theme.text.tertiary} />
-                <Text style={[styles.summaryText, { color: theme.text.tertiary }]}>
-                  No water intake logged
-                </Text>
-              </View>
-            )}
-            
-            {userData.exercise.length > 0 ? (
-              <View style={styles.summaryItem}>
-                <Ionicons name="fitness" size={20} color={theme.text.primary} />
-                <Text style={[styles.summaryText, { color: theme.text.primary }]}>
-                  {userData.exercise.length} workouts logged
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.summaryItem}>
-                <Ionicons name="fitness-outline" size={20} color={theme.text.tertiary} />
-                <Text style={[styles.summaryText, { color: theme.text.tertiary }]}>
-                  No exercise logged
-                </Text>
-              </View>
-            )}
-            
-            {userData.sleep.length > 0 ? (
-              <View style={styles.summaryItem}>
-                <Ionicons name="bed" size={20} color={theme.text.primary} />
-                <Text style={[styles.summaryText, { color: theme.text.primary }]}>
-                  Sleep logged
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.summaryItem}>
-                <Ionicons name="bed-outline" size={20} color={theme.text.tertiary} />
-                <Text style={[styles.summaryText, { color: theme.text.tertiary }]}>
-                  No sleep logged
-                </Text>
-              </View>
-            )}
-            
-            {userData.mood.length > 0 ? (
-              <View style={styles.summaryItem}>
-                <Ionicons name="happy" size={20} color={theme.text.primary} />
-                <Text style={[styles.summaryText, { color: theme.text.primary }]}>
-                  Mood logged
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.summaryItem}>
-                <Ionicons name="happy-outline" size={20} color={theme.text.tertiary} />
-                <Text style={[styles.summaryText, { color: theme.text.tertiary }]}>
-                  No mood logged
-                </Text>
-              </View>
-            )}
+          <View style={styles.statItem}>
+            <View style={styles.statHeader}>
+              <Ionicons name="moon-outline" size={20} color={theme.secondary.main} />
+              <Text style={[styles.statTitle, { color: theme.text.primary }]}>Sleep</Text>
+            </View>
+            {renderProgressBar(todayStats.sleep.current, todayStats.sleep.goal, theme.secondary.main)}
           </View>
+        </View>
+        
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Quick Log</Text>
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="water" size={24} color={theme.info.main} />
+              <Text style={[styles.actionText, { color: theme.text.primary }]}>Water</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="fast-food" size={24} color={theme.error.main} />
+              <Text style={[styles.actionText, { color: theme.text.primary }]}>Food</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="barbell" size={24} color={theme.success.main} />
+              <Text style={[styles.actionText, { color: theme.text.primary }]}>Exercise</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="happy" size={24} color={theme.warning.main} />
+              <Text style={[styles.actionText, { color: theme.text.primary }]}>Mood</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* Daily Insights */}
+        <View style={styles.insights}>
+          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Daily Insight</Text>
           
-          {/* Daily Insights */}
-          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-            Daily Insight
-          </Text>
           {insights.length > 0 ? (
-            <View style={[styles.insightCard, { backgroundColor: theme.background.accent }]}>
-              <View style={styles.insightHeader}>
-                <Ionicons name="bulb" size={24} color={theme.primary.main} />
+            insights.map((insight) => (
+              <View
+                key={insight.id}
+                style={[styles.insightCard, { backgroundColor: theme.background.secondary }]}
+              >
                 <Text style={[styles.insightTitle, { color: theme.text.primary }]}>
-                  {insights[0].title}
+                  {insight.title}
+                </Text>
+                <Text style={[styles.insightContent, { color: theme.text.secondary }]}>
+                  {insight.content}
                 </Text>
               </View>
-              <Text style={[styles.insightContent, { color: theme.text.secondary }]}>
-                {insights[0].content}
-              </Text>
-            </View>
+            ))
           ) : (
-            <View style={[styles.emptyInsight, { backgroundColor: theme.background.secondary }]}>
-              <Ionicons name="bulb-outline" size={24} color={theme.text.tertiary} />
-              <Text style={[styles.emptyInsightText, { color: theme.text.tertiary }]}>
-                Log more data to get personalized insights
+            <View style={[styles.insightCard, { backgroundColor: theme.background.secondary }]}>
+              <Text style={[styles.insightTitle, { color: theme.text.primary }]}>
+                Track Your Health
+              </Text>
+              <Text style={[styles.insightContent, { color: theme.text.secondary }]}>
+                Start logging your health data to receive personalized insights and recommendations.
               </Text>
             </View>
           )}
-          
-          {/* View All Insights Button */}
-          <TouchableOpacity 
-            style={[styles.viewAllButton, { borderColor: theme.primary.main }]}
-            onPress={() => navigation.navigate('Insights')}
-          >
-            <Text style={[styles.viewAllText, { color: theme.primary.main }]}>
-              View All Insights
-            </Text>
-            <Ionicons name="arrow-forward" size={16} color={theme.primary.main} />
-          </TouchableOpacity>
-        </>
-      )}
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: SPACING.LARGE,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: 300,
+  scrollContainer: {
+    padding: 20,
   },
-  welcomeSection: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: SPACING.LARGE,
-    marginBottom: SPACING.MEDIUM,
+    marginBottom: 24,
   },
-  welcomeText: {
-    fontSize: FONT_SIZES.XLARGE,
+  greeting: {
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 4,
   },
-  dateText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginTop: SPACING.TINY,
+  date: {
+    fontSize: 16,
   },
-  completionBadge: {
-    paddingHorizontal: SPACING.MEDIUM,
-    paddingVertical: SPACING.TINY,
+  profileButton: {
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  completionText: {
-    fontSize: FONT_SIZES.SMALL,
+  profileInitial: {
+    fontSize: 18,
     fontWeight: 'bold',
   },
-  sectionTitle: {
-    fontSize: FONT_SIZES.LARGE,
-    fontWeight: 'bold',
-    marginTop: SPACING.LARGE,
-    marginBottom: SPACING.MEDIUM,
+  statsCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  statItem: {
+    marginBottom: 12,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statTitle: {
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  progressBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBar: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  progress: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    width: 70,
+    textAlign: 'right',
   },
   quickActions: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  actionsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
-  quickActionButton: {
-    width: '18%',
+  actionButton: {
+    width: '22%',
     aspectRatio: 1,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: SPACING.SMALL,
-    marginBottom: SPACING.MEDIUM,
   },
-  quickActionText: {
-    fontSize: FONT_SIZES.TINY,
-    marginTop: SPACING.TINY,
+  actionText: {
+    fontSize: 12,
+    marginTop: 8,
   },
-  summaryCard: {
-    borderRadius: SPACING.MEDIUM,
-    padding: SPACING.MEDIUM,
-    marginBottom: SPACING.MEDIUM,
-  },
-  summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.SMALL,
-  },
-  summaryText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginLeft: SPACING.SMALL,
+  insights: {
+    marginBottom: 24,
   },
   insightCard: {
-    borderRadius: SPACING.MEDIUM,
-    padding: SPACING.MEDIUM,
-    marginBottom: SPACING.MEDIUM,
-  },
-  insightHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.SMALL,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
   },
   insightTitle: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
-    marginLeft: SPACING.SMALL,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   insightContent: {
-    fontSize: FONT_SIZES.MEDIUM,
-    lineHeight: 22,
-  },
-  emptyInsight: {
-    borderRadius: SPACING.MEDIUM,
-    padding: SPACING.MEDIUM,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 100,
-    marginBottom: SPACING.MEDIUM,
-  },
-  emptyInsightText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginTop: SPACING.SMALL,
-  },
-  viewAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderRadius: SPACING.SMALL,
-    padding: SPACING.MEDIUM,
-    marginBottom: SPACING.LARGE,
-  },
-  viewAllText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginRight: SPACING.SMALL,
-    fontWeight: '500',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
 

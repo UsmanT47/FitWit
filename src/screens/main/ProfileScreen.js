@@ -1,466 +1,347 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
+  SafeAreaView, 
   ScrollView, 
-  TouchableOpacity, 
+  TouchableOpacity,
   Switch,
-  Alert,
-  ActivityIndicator
+  Alert
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { SPACING, FONT_SIZES } from '../../constants/dimensions';
-import { Ionicons } from '@expo/vector-icons';
 import { THEMES } from '../../constants/config';
-import { getProfileStats, getUserPreferences, updateUserPreferences, clearAllData } from '../../services/storageService';
 
 const ProfileScreen = () => {
   const { theme, themeMode, setThemeMode, isDarkMode } = useTheme();
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({
-    streakDays: 0,
-    totalLogs: 0,
-    completionRate: 0,
-    averageSleep: 0,
-    avgWaterIntake: 0,
-  });
-  
-  const [preferences, setPreferences] = useState({
-    notifications: true,
-    reminders: true,
-    useMetric: false,
-    waterGoal: 8,
-    sleepGoal: 8,
-  });
-  
-  // Load profile data on mount
-  useEffect(() => {
-    loadProfileData();
-  }, []);
-  
-  // Load profile stats and preferences
-  const loadProfileData = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get user stats
-      const userStats = await getProfileStats();
-      setStats(userStats);
-      
-      // Get user preferences
-      const userPrefs = await getUserPreferences();
-      if (userPrefs && Object.keys(userPrefs).length > 0) {
-        setPreferences(prevPrefs => ({
-          ...prevPrefs,
-          ...userPrefs,
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  // Toggle theme mode
-  const toggleTheme = () => {
-    setThemeMode(isDarkMode ? THEMES.LIGHT : THEMES.DARK);
-  };
-  
-  // Toggle notification preference
-  const toggleNotifications = async (value) => {
-    try {
-      const updatedPrefs = { ...preferences, notifications: value };
-      setPreferences(updatedPrefs);
-      await updateUserPreferences(updatedPrefs);
-    } catch (error) {
-      console.error('Error updating notification preference:', error);
-    }
-  };
-  
-  // Toggle reminders preference
-  const toggleReminders = async (value) => {
-    try {
-      const updatedPrefs = { ...preferences, reminders: value };
-      setPreferences(updatedPrefs);
-      await updateUserPreferences(updatedPrefs);
-    } catch (error) {
-      console.error('Error updating reminders preference:', error);
-    }
-  };
-  
-  // Toggle unit system preference
-  const toggleUnitSystem = async (value) => {
-    try {
-      const updatedPrefs = { ...preferences, useMetric: value };
-      setPreferences(updatedPrefs);
-      await updateUserPreferences(updatedPrefs);
-    } catch (error) {
-      console.error('Error updating unit system preference:', error);
-    }
-  };
-  
-  // Handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
-      'Confirm Logout',
+      'Log Out',
       'Are you sure you want to log out?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => logout() },
-      ]
-    );
-  };
-  
-  // Handle reset data
-  const handleResetData = () => {
-    Alert.alert(
-      'Reset All Data',
-      'Are you sure you want to reset all your data? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Reset', 
-          style: 'destructive', 
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Log Out',
+          style: 'destructive',
           onPress: async () => {
             try {
-              await clearAllData();
-              // Reload stats after clearing data
-              await loadProfileData();
-              Alert.alert('Success', 'All data has been reset successfully');
+              setIsLoggingOut(true);
+              await logout();
+              // Auth context will handle navigation
             } catch (error) {
-              console.error('Error resetting data:', error);
-              Alert.alert('Error', 'Failed to reset data');
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to log out. Please try again.');
+              setIsLoggingOut(false);
             }
-          }
+          },
         },
       ]
     );
   };
   
+  const toggleDarkMode = () => {
+    setThemeMode(isDarkMode ? THEMES.LIGHT : THEMES.DARK);
+  };
+  
+  const setSystemTheme = () => {
+    setThemeMode(THEMES.SYSTEM);
+  };
+  
+  const renderSettingItem = ({ icon, title, subtitle, action, toggle, value }) => {
+    return (
+      <TouchableOpacity 
+        style={[styles.settingItem, { borderBottomColor: theme.border }]}
+        onPress={action}
+        disabled={toggle !== undefined}
+      >
+        <View style={styles.settingIconContainer}>
+          <Ionicons name={icon} size={22} color={theme.primary.main} />
+        </View>
+        <View style={styles.settingContent}>
+          <Text style={[styles.settingTitle, { color: theme.text.primary }]}>{title}</Text>
+          {subtitle && (
+            <Text style={[styles.settingSubtitle, { color: theme.text.secondary }]}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
+        {toggle !== undefined ? (
+          <Switch
+            trackColor={{ false: theme.background.tertiary, true: theme.primary.light }}
+            thumbColor={value ? theme.primary.main : theme.background.secondary}
+            ios_backgroundColor={theme.background.tertiary}
+            onValueChange={toggle}
+            value={value}
+          />
+        ) : (
+          <Ionicons 
+            name="chevron-forward" 
+            size={18} 
+            color={theme.text.tertiary} 
+          />
+        )}
+      </TouchableOpacity>
+    );
+  };
+  
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background.primary }]}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={[styles.avatar, { backgroundColor: theme.primary.main }]}>
-          <Text style={[styles.avatarText, { color: theme.primary.contrast }]}>
-            {user?.username ? user.username.charAt(0).toUpperCase() : 'U'}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
+      
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Profile</Text>
+      </View>
+      
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* User Info Section */}
+        <View style={[styles.userInfoContainer, { backgroundColor: theme.background.secondary }]}>
+          <View style={[styles.avatarContainer, { backgroundColor: theme.primary.light }]}>
+            <Text style={[styles.avatarText, { color: theme.primary.main }]}>
+              {user?.name?.charAt(0) || 'U'}
+            </Text>
+          </View>
+          <Text style={[styles.userName, { color: theme.text.primary }]}>
+            {user?.name || 'User'}
           </Text>
-        </View>
-        <Text style={[styles.username, { color: theme.text.primary }]}>
-          {user?.username || 'User'}
-        </Text>
-        <Text style={[styles.email, { color: theme.text.secondary }]}>
-          {user?.email || 'user@example.com'}
-        </Text>
-      </View>
-      
-      {/* Stats Section */}
-      <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-        Your Stats
-      </Text>
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.primary.main} />
-        </View>
-      ) : (
-        <View style={[styles.statsContainer, { backgroundColor: theme.background.secondary }]}>
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: theme.text.primary }]}>
-              {stats.streakDays}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-              Day Streak
-            </Text>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: theme.text.primary }]}>
-              {stats.totalLogs}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-              Total Logs
-            </Text>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: theme.text.primary }]}>
-              {stats.completionRate}%
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.text.secondary }]}>
-              Completion
-            </Text>
-          </View>
-        </View>
-      )}
-      
-      {/* Preferences Section */}
-      <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-        Preferences
-      </Text>
-      <View style={[styles.preferencesContainer, { backgroundColor: theme.background.secondary }]}>
-        {/* Dark Mode Toggle */}
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceTextContainer}>
-            <Ionicons 
-              name={isDarkMode ? 'moon' : 'sunny'} 
-              size={20} 
-              color={theme.text.primary} 
-            />
-            <Text style={[styles.preferenceText, { color: theme.text.primary }]}>
-              Dark Mode
-            </Text>
-          </View>
-          <Switch
-            value={isDarkMode}
-            onValueChange={toggleTheme}
-            trackColor={{ false: theme.text.tertiary, true: theme.primary.light }}
-            thumbColor={isDarkMode ? theme.primary.main : theme.background.primary}
-          />
-        </View>
-        
-        {/* Notifications Toggle */}
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceTextContainer}>
-            <Ionicons 
-              name="notifications" 
-              size={20} 
-              color={theme.text.primary} 
-            />
-            <Text style={[styles.preferenceText, { color: theme.text.primary }]}>
-              Notifications
-            </Text>
-          </View>
-          <Switch
-            value={preferences.notifications}
-            onValueChange={toggleNotifications}
-            trackColor={{ false: theme.text.tertiary, true: theme.primary.light }}
-            thumbColor={preferences.notifications ? theme.primary.main : theme.background.primary}
-          />
-        </View>
-        
-        {/* Reminders Toggle */}
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceTextContainer}>
-            <Ionicons 
-              name="alarm" 
-              size={20} 
-              color={theme.text.primary} 
-            />
-            <Text style={[styles.preferenceText, { color: theme.text.primary }]}>
-              Daily Reminders
-            </Text>
-          </View>
-          <Switch
-            value={preferences.reminders}
-            onValueChange={toggleReminders}
-            trackColor={{ false: theme.text.tertiary, true: theme.primary.light }}
-            thumbColor={preferences.reminders ? theme.primary.main : theme.background.primary}
-          />
-        </View>
-        
-        {/* Units Toggle */}
-        <View style={styles.preferenceItem}>
-          <View style={styles.preferenceTextContainer}>
-            <Ionicons 
-              name="options" 
-              size={20} 
-              color={theme.text.primary} 
-            />
-            <Text style={[styles.preferenceText, { color: theme.text.primary }]}>
-              Use Metric Units
-            </Text>
-          </View>
-          <Switch
-            value={preferences.useMetric}
-            onValueChange={toggleUnitSystem}
-            trackColor={{ false: theme.text.tertiary, true: theme.primary.light }}
-            thumbColor={preferences.useMetric ? theme.primary.main : theme.background.primary}
-          />
-        </View>
-      </View>
-      
-      {/* Account Section */}
-      <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-        Account
-      </Text>
-      <View style={[styles.accountContainer, { backgroundColor: theme.background.secondary }]}>
-        <TouchableOpacity style={styles.accountItem}>
-          <View style={styles.accountItemContent}>
-            <Ionicons name="person" size={20} color={theme.text.primary} />
-            <Text style={[styles.accountItemText, { color: theme.text.primary }]}>
+          <Text style={[styles.userEmail, { color: theme.text.secondary }]}>
+            {user?.email || 'user@example.com'}
+          </Text>
+          <TouchableOpacity
+            style={[styles.editProfileButton, { borderColor: theme.primary.main }]}
+          >
+            <Text style={[styles.editProfileText, { color: theme.primary.main }]}>
               Edit Profile
             </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
         
-        <TouchableOpacity style={styles.accountItem}>
-          <View style={styles.accountItemContent}>
-            <Ionicons name="lock-closed" size={20} color={theme.text.primary} />
-            <Text style={[styles.accountItemText, { color: theme.text.primary }]}>
-              Change Password
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
-        </TouchableOpacity>
+        {/* Settings Sections */}
+        <View style={styles.settingsSection}>
+          <Text style={[styles.sectionTitle, { color: theme.text.secondary }]}>
+            Appearance
+          </Text>
+          
+          {renderSettingItem({
+            icon: 'moon',
+            title: 'Dark Mode',
+            subtitle: 'Toggle dark mode on or off',
+            toggle: toggleDarkMode,
+            value: isDarkMode,
+          })}
+          
+          {renderSettingItem({
+            icon: 'phone-portrait',
+            title: 'Use System Settings',
+            subtitle: 'Follow your device theme',
+            toggle: setSystemTheme,
+            value: themeMode === THEMES.SYSTEM,
+          })}
+        </View>
         
-        <TouchableOpacity 
-          style={styles.accountItem}
-          onPress={handleResetData}
-        >
-          <View style={styles.accountItemContent}>
-            <Ionicons name="trash" size={20} color={theme.error.main} />
-            <Text style={[styles.accountItemText, { color: theme.error.main }]}>
-              Reset All Data
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
-        </TouchableOpacity>
+        <View style={styles.settingsSection}>
+          <Text style={[styles.sectionTitle, { color: theme.text.secondary }]}>
+            Data
+          </Text>
+          
+          {renderSettingItem({
+            icon: 'fitness',
+            title: 'Connect Fitness Tracker',
+            subtitle: 'Sync data with your wearable devices',
+            action: () => {},
+          })}
+          
+          {renderSettingItem({
+            icon: 'cloud-download',
+            title: 'Export Health Data',
+            subtitle: 'Save your health logs to a file',
+            action: () => {},
+          })}
+          
+          {renderSettingItem({
+            icon: 'trash',
+            title: 'Clear All Data',
+            subtitle: 'Delete all your health logs',
+            action: () => {},
+          })}
+        </View>
         
-        <TouchableOpacity 
-          style={styles.accountItem}
+        <View style={styles.settingsSection}>
+          <Text style={[styles.sectionTitle, { color: theme.text.secondary }]}>
+            Account
+          </Text>
+          
+          {renderSettingItem({
+            icon: 'notifications',
+            title: 'Notifications',
+            subtitle: 'Manage your notification preferences',
+            action: () => {},
+          })}
+          
+          {renderSettingItem({
+            icon: 'lock-closed',
+            title: 'Change Password',
+            subtitle: 'Update your account password',
+            action: () => {},
+          })}
+          
+          {renderSettingItem({
+            icon: 'help-circle',
+            title: 'Help & Support',
+            subtitle: 'Contact us or view FAQs',
+            action: () => {},
+          })}
+          
+          {renderSettingItem({
+            icon: 'document-text',
+            title: 'Privacy Policy',
+            subtitle: 'Read our privacy policy',
+            action: () => {},
+          })}
+        </View>
+        
+        {/* Logout Button */}
+        <TouchableOpacity
+          style={[
+            styles.logoutButton, 
+            { backgroundColor: theme.error.light },
+            isLoggingOut && { opacity: 0.7 }
+          ]}
           onPress={handleLogout}
+          disabled={isLoggingOut}
         >
-          <View style={styles.accountItemContent}>
-            <Ionicons name="log-out" size={20} color={theme.error.main} />
-            <Text style={[styles.accountItemText, { color: theme.error.main }]}>
-              Logout
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
+          <Ionicons name="log-out-outline" size={20} color={theme.error.main} />
+          <Text style={[styles.logoutText, { color: theme.error.main }]}>
+            {isLoggingOut ? 'Logging Out...' : 'Log Out'}
+          </Text>
         </TouchableOpacity>
-      </View>
-      
-      {/* App Info */}
-      <View style={styles.appInfo}>
-        <Text style={[styles.appVersion, { color: theme.text.tertiary }]}>
-          FitWit v1.0.0
-        </Text>
-      </View>
-    </ScrollView>
+        
+        <View style={styles.versionContainer}>
+          <Text style={[styles.versionText, { color: theme.text.tertiary }]}>
+            FitWit v1.0.0
+          </Text>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.LARGE,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: SPACING.LARGE,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  avatar: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  scrollContainer: {
+    paddingBottom: 40,
+  },
+  userInfoContainer: {
+    alignItems: 'center',
+    padding: 24,
+    margin: 16,
+    borderRadius: 16,
+  },
+  avatarContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: SPACING.MEDIUM,
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   avatarText: {
-    fontSize: FONT_SIZES.XXLARGE,
+    fontSize: 32,
     fontWeight: 'bold',
   },
-  username: {
-    fontSize: FONT_SIZES.LARGE,
+  userName: {
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: SPACING.TINY,
+    marginBottom: 4,
   },
-  email: {
-    fontSize: FONT_SIZES.MEDIUM,
+  userEmail: {
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  editProfileButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderRadius: 20,
+  },
+  editProfileText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  settingsSection: {
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.LARGE,
-    fontWeight: 'bold',
-    marginBottom: SPACING.MEDIUM,
+    fontSize: 14,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    marginLeft: 20,
+    marginBottom: 8,
   },
-  loadingContainer: {
-    height: 80,
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+  },
+  settingIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginRight: 12,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    borderRadius: SPACING.MEDIUM,
-    marginBottom: SPACING.LARGE,
-    padding: SPACING.MEDIUM,
-  },
-  statItem: {
+  settingContent: {
     flex: 1,
-    alignItems: 'center',
   },
-  statValue: {
-    fontSize: FONT_SIZES.XXLARGE,
-    fontWeight: 'bold',
-    marginBottom: SPACING.TINY,
+  settingTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 2,
   },
-  statLabel: {
-    fontSize: FONT_SIZES.SMALL,
+  settingSubtitle: {
+    fontSize: 13,
   },
-  statDivider: {
-    width: 1,
-    height: '80%',
-    alignSelf: 'center',
-    backgroundColor: '#E0E0E0',
-  },
-  preferencesContainer: {
-    borderRadius: SPACING.MEDIUM,
-    marginBottom: SPACING.LARGE,
-  },
-  preferenceItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: SPACING.MEDIUM,
-    paddingHorizontal: SPACING.MEDIUM,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  preferenceTextContainer: {
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 28,
+    marginBottom: 20,
   },
-  preferenceText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginLeft: SPACING.MEDIUM,
+  logoutText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
-  accountContainer: {
-    borderRadius: SPACING.MEDIUM,
-    marginBottom: SPACING.LARGE,
-  },
-  accountItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: SPACING.MEDIUM,
-    paddingHorizontal: SPACING.MEDIUM,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  accountItemContent: {
-    flexDirection: 'row',
+  versionContainer: {
     alignItems: 'center',
   },
-  accountItemText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginLeft: SPACING.MEDIUM,
-  },
-  appInfo: {
-    alignItems: 'center',
-    marginBottom: SPACING.LARGE,
-  },
-  appVersion: {
-    fontSize: FONT_SIZES.SMALL,
+  versionText: {
+    fontSize: 12,
   },
 });
 

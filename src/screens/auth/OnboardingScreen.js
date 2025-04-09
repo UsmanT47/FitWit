@@ -1,157 +1,162 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
-import { SPACING, FONT_SIZES, SCREEN_WIDTH } from '../../constants/dimensions';
-import { STORAGE_KEYS } from '../../constants/config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const OnboardingScreen = ({ navigation }) => {
+const OnboardingScreen = () => {
+  const navigation = useNavigation();
   const { theme } = useTheme();
-  
-  // Function to handle skipping onboarding
-  const handleSkip = async () => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
-      navigation.replace('Login');
-    } catch (error) {
-      console.error('Error saving onboarding state:', error);
-      navigation.replace('Login');
-    }
-  };
-  
-  // Function to go to the login screen
-  const handleGetStarted = async () => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true');
-      navigation.replace('Login');
-    } catch (error) {
-      console.error('Error saving onboarding state:', error);
-      navigation.replace('Login');
-    }
-  };
-  
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={[styles.skipText, { color: theme.text.secondary }]}>Skip</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
       
-      <ScrollView 
-        horizontal 
-        pagingEnabled 
-        showsHorizontalScrollIndicator={false}
-        style={styles.scrollView}
-      >
-        {/* Slide 1 */}
-        <View style={styles.slide}>
-          <Image 
-            source={require('../../../assets/onboarding-1.png')} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: theme.text.primary }]}>
-            Track Your Health
-          </Text>
-          <Text style={[styles.description, { color: theme.text.secondary }]}>
-            Log your food, exercise, sleep, and more to get a complete picture of your health.
-          </Text>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text.primary }]}>Welcome to FitWit</Text>
+        <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+          Your personal health and fitness companion
+        </Text>
+      </View>
+      
+      <View style={styles.imageContainer}>
+        <View style={[styles.imagePlaceholder, { backgroundColor: theme.background.secondary }]}>
+          <Text style={{ color: theme.text.secondary }}>App Logo</Text>
+        </View>
+      </View>
+      
+      <View style={styles.featuresContainer}>
+        <Text style={[styles.featureTitle, { color: theme.text.primary }]}>Key Features:</Text>
+        
+        <View style={styles.feature}>
+          <View style={[styles.featureIcon, { backgroundColor: theme.primary.main }]} />
+          <View style={styles.featureTextContainer}>
+            <Text style={[styles.featureText, { color: theme.text.primary }]}>Track your health metrics</Text>
+          </View>
         </View>
         
-        {/* Slide 2 */}
-        <View style={styles.slide}>
-          <Image 
-            source={require('../../../assets/onboarding-2.png')} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: theme.text.primary }]}>
-            Get Personalized Insights
-          </Text>
-          <Text style={[styles.description, { color: theme.text.secondary }]}>
-            Our AI-powered system analyzes your data to provide personalized health insights and recommendations.
-          </Text>
+        <View style={styles.feature}>
+          <View style={[styles.featureIcon, { backgroundColor: theme.secondary.main }]} />
+          <View style={styles.featureTextContainer}>
+            <Text style={[styles.featureText, { color: theme.text.primary }]}>Get AI-powered insights</Text>
+          </View>
         </View>
         
-        {/* Slide 3 */}
-        <View style={styles.slide}>
-          <Image 
-            source={require('../../../assets/onboarding-3.png')} 
-            style={styles.image}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: theme.text.primary }]}>
-            Achieve Your Goals
-          </Text>
-          <Text style={[styles.description, { color: theme.text.secondary }]}>
-            Set health goals and track your progress to stay motivated and achieve results.
-          </Text>
+        <View style={styles.feature}>
+          <View style={[styles.featureIcon, { backgroundColor: theme.error.main }]} />
+          <View style={styles.featureTextContainer}>
+            <Text style={[styles.featureText, { color: theme.text.primary }]}>Log food with barcode scanner</Text>
+          </View>
         </View>
-      </ScrollView>
+        
+        <View style={styles.feature}>
+          <View style={[styles.featureIcon, { backgroundColor: theme.success.main }]} />
+          <View style={styles.featureTextContainer}>
+            <Text style={[styles.featureText, { color: theme.text.primary }]}>Sync with fitness devices</Text>
+          </View>
+        </View>
+      </View>
       
-      <View style={styles.footer}>
-        <TouchableOpacity 
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
           style={[styles.button, { backgroundColor: theme.primary.main }]}
-          onPress={handleGetStarted}
+          onPress={() => navigation.navigate('Login')}
         >
-          <Text style={[styles.buttonText, { color: theme.primary.contrast }]}>
-            Get Started
-          </Text>
+          <Text style={styles.buttonText}>Get Started</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.secondaryButton, { borderColor: theme.primary.main }]}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={[styles.secondaryButtonText, { color: theme.primary.main }]}>I already have an account</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 20,
   },
-  skipButton: {
-    position: 'absolute',
-    top: 50,
-    right: SPACING.LARGE,
-    zIndex: 1,
-  },
-  skipText: {
-    fontSize: FONT_SIZES.REGULAR,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  slide: {
-    width: SCREEN_WIDTH,
-    justifyContent: 'center',
+  header: {
+    marginTop: 20,
     alignItems: 'center',
-    padding: SPACING.LARGE,
-  },
-  image: {
-    width: SCREEN_WIDTH * 0.8,
-    height: SCREEN_WIDTH * 0.8,
-    marginBottom: SPACING.LARGE,
   },
   title: {
-    fontSize: FONT_SIZES.XXLARGE,
+    fontSize: 28,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: SPACING.MEDIUM,
+    marginBottom: 8,
   },
-  description: {
-    fontSize: FONT_SIZES.REGULAR,
+  subtitle: {
+    fontSize: 16,
     textAlign: 'center',
-    marginHorizontal: SPACING.LARGE,
   },
-  footer: {
-    padding: SPACING.LARGE,
+  imageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: 40,
+  },
+  imagePlaceholder: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featuresContainer: {
+    marginBottom: 40,
+  },
+  featureTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  featureIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+  },
+  featureTextContainer: {
+    flex: 1,
+  },
+  featureText: {
+    fontSize: 16,
+  },
+  buttonContainer: {
+    marginTop: 'auto',
+    marginBottom: 20,
   },
   button: {
-    paddingVertical: SPACING.MEDIUM,
-    paddingHorizontal: SPACING.LARGE,
-    borderRadius: SPACING.MEDIUM,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
   },
   buttonText: {
-    fontSize: FONT_SIZES.LARGE,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

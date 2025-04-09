@@ -3,242 +3,244 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  TextInput, 
   TouchableOpacity, 
-  ActivityIndicator,
+  SafeAreaView, 
+  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  TouchableWithoutFeedback,
+  Keyboard
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { SPACING, FONT_SIZES } from '../../constants/dimensions';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = () => {
+  const navigation = useNavigation();
   const { theme } = useTheme();
   const { login } = useAuth();
   
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Handle login
   const handleLogin = async () => {
-    // Validate inputs
-    if (!username || !password) {
-      setError('Please fill in all fields');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       return;
     }
     
+    setLoading(true);
+    setError('');
+    
     try {
-      setIsLoading(true);
-      setError('');
-      
-      // Call login function from Auth context
-      await login({ username, password });
-      
-      // Login successful - Auth context will handle navigation
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'Login failed. Please try again.');
+      await login({ email, password });
+      // On successful login, the AuthContext will update isAuthenticated
+      // and the AppNavigator will automatically redirect to the main app
+    } catch (err) {
+      setError(err.message || 'Failed to login. Please try again.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
-  // Navigate to registration screen
-  const goToRegister = () => {
-    navigation.navigate('Register');
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPassword');
   };
   
-  // Navigate to forgot password screen
-  const goToForgotPassword = () => {
-    navigation.navigate('ForgotPassword');
+  const handleRegister = () => {
+    navigation.navigate('Register');
   };
   
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
     >
-      <ScrollView 
-        contentContainerStyle={[
-          styles.container, 
-          { backgroundColor: theme.background.primary }
-        ]}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: theme.text.primary }]}>
-            Welcome Back
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
-            Sign in to continue to FitWit
-          </Text>
-        </View>
-        
-        <View style={styles.form}>
-          {/* Username Input */}
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: theme.text.secondary }]}>
-              Username
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: theme.background.secondary,
-                  color: theme.text.primary,
-                  borderColor: theme.border
-                }
-              ]}
-              placeholder="Enter your username"
-              placeholderTextColor={theme.text.tertiary}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-          </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+          <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
           
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: theme.text.secondary }]}>
-              Password
-            </Text>
-            <TextInput
-              style={[
-                styles.input,
-                { 
-                  backgroundColor: theme.background.secondary,
-                  color: theme.text.primary,
-                  borderColor: theme.border
-                }
-              ]}
-              placeholder="Enter your password"
-              placeholderTextColor={theme.text.tertiary}
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
-          </View>
-          
-          {/* Forgot Password */}
-          <TouchableOpacity style={styles.forgotPassword} onPress={goToForgotPassword}>
-            <Text style={[styles.forgotPasswordText, { color: theme.primary.main }]}>
-              Forgot password?
-            </Text>
-          </TouchableOpacity>
-          
-          {/* Display Error */}
-          {error ? (
-            <Text style={[styles.errorText, { color: theme.error.main }]}>
-              {error}
-            </Text>
-          ) : null}
-          
-          {/* Login Button */}
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: theme.primary.main }
-            ]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={theme.primary.contrast} />
-            ) : (
-              <Text style={[styles.buttonText, { color: theme.primary.contrast }]}>
-                Sign In
+          <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.header}>
+              <Text style={[styles.title, { color: theme.text.primary }]}>Welcome Back</Text>
+              <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+                Sign in to continue tracking your health journey
               </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-        
-        {/* Register Link */}
-        <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.text.secondary }]}>
-            Don't have an account?{' '}
-          </Text>
-          <TouchableOpacity onPress={goToRegister}>
-            <Text style={[styles.linkText, { color: theme.primary.main }]}>
-              Sign Up
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            </View>
+            
+            <View style={styles.formContainer}>
+              {error ? (
+                <View style={[styles.errorContainer, { backgroundColor: theme.error.light }]}>
+                  <Text style={[styles.errorText, { color: theme.error.dark }]}>{error}</Text>
+                </View>
+              ) : null}
+              
+              <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: theme.text.primary }]}>Email</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: theme.input.background,
+                      borderColor: theme.input.border,
+                      color: theme.text.primary
+                    }
+                  ]}
+                  placeholder="Enter your email"
+                  placeholderTextColor={theme.input.placeholder}
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={[styles.inputLabel, { color: theme.text.primary }]}>Password</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    { 
+                      backgroundColor: theme.input.background,
+                      borderColor: theme.input.border,
+                      color: theme.text.primary
+                    }
+                  ]}
+                  placeholder="Enter your password"
+                  placeholderTextColor={theme.input.placeholder}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                />
+              </View>
+              
+              <TouchableOpacity
+                style={styles.forgotPasswordContainer}
+                onPress={handleForgotPassword}
+              >
+                <Text style={[styles.forgotPasswordText, { color: theme.primary.main }]}>
+                  Forgot Password?
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  { backgroundColor: theme.primary.main },
+                  loading && { opacity: 0.7 }
+                ]}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Text>
+              </TouchableOpacity>
+              
+              <View style={styles.registerContainer}>
+                <Text style={[styles.registerText, { color: theme.text.secondary }]}>
+                  Don't have an account?
+                </Text>
+                <TouchableOpacity onPress={handleRegister}>
+                  <Text style={[styles.registerLink, { color: theme.primary.main }]}>
+                    {' Sign Up'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollContainer: {
     flexGrow: 1,
-    padding: SPACING.LARGE,
-    justifyContent: 'center',
+    padding: 20,
   },
   header: {
-    marginBottom: SPACING.XLARGE,
+    marginTop: 40,
+    marginBottom: 40,
   },
   title: {
-    fontSize: FONT_SIZES.TITLE,
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: SPACING.SMALL,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: FONT_SIZES.MEDIUM,
+    fontSize: 16,
   },
-  form: {
-    marginBottom: SPACING.XLARGE,
+  formContainer: {
+    marginBottom: 20,
+  },
+  errorContainer: {
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  errorText: {
+    fontSize: 14,
   },
   inputContainer: {
-    marginBottom: SPACING.MEDIUM,
+    marginBottom: 20,
   },
-  label: {
-    fontSize: FONT_SIZES.SMALL,
-    marginBottom: SPACING.TINY,
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 8,
   },
   input: {
     height: 50,
     borderWidth: 1,
-    borderRadius: SPACING.SMALL,
-    paddingHorizontal: SPACING.MEDIUM,
-    fontSize: FONT_SIZES.REGULAR,
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    fontSize: 16,
   },
-  forgotPassword: {
+  forgotPasswordContainer: {
     alignSelf: 'flex-end',
-    marginBottom: SPACING.LARGE,
+    marginTop: 4,
   },
   forgotPasswordText: {
-    fontSize: FONT_SIZES.SMALL,
+    fontSize: 14,
+    fontWeight: '500',
   },
-  errorText: {
-    fontSize: FONT_SIZES.SMALL,
-    marginBottom: SPACING.MEDIUM,
+  buttonContainer: {
+    marginTop: 'auto',
+    marginBottom: 20,
   },
-  button: {
-    height: 50,
-    borderRadius: SPACING.SMALL,
-    justifyContent: 'center',
+  loginButton: {
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
-  buttonText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  footer: {
+  registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  footerText: {
-    fontSize: FONT_SIZES.MEDIUM,
+  registerText: {
+    fontSize: 16,
   },
-  linkText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
+  registerLink: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

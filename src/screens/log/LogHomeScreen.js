@@ -3,239 +3,162 @@ import {
   View, 
   Text, 
   StyleSheet, 
+  SafeAreaView, 
   ScrollView, 
   TouchableOpacity,
-  Image
+  Image 
 } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
-import { SPACING, FONT_SIZES, SCREEN_WIDTH } from '../../constants/dimensions';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
-import { FEATURES } from '../../constants/config';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../context/ThemeContext';
 
-const LogHomeScreen = ({ navigation }) => {
+const LogHomeScreen = () => {
+  const navigation = useNavigation();
   const { theme } = useTheme();
   
-  // Navigate to a specific log screen
-  const navigateToLog = (screen) => {
+  const logItems = [
+    {
+      id: 'food',
+      title: 'Food',
+      icon: 'fast-food-outline',
+      color: theme.error.main,
+      screen: 'FoodLog',
+      description: 'Log your meals and track your nutrition intake',
+    },
+    {
+      id: 'water',
+      title: 'Water',
+      icon: 'water-outline',
+      color: theme.info.main,
+      screen: 'WaterLog',
+      description: 'Track your daily water consumption',
+    },
+    {
+      id: 'exercise',
+      title: 'Exercise',
+      icon: 'barbell-outline',
+      color: theme.success.main,
+      screen: 'ExerciseLog',
+      description: 'Record your workouts and physical activities',
+    },
+    {
+      id: 'sleep',
+      title: 'Sleep',
+      icon: 'moon-outline',
+      color: theme.secondary.main,
+      screen: 'SleepLog',
+      description: 'Track your sleep patterns and quality',
+    },
+    {
+      id: 'mood',
+      title: 'Mood',
+      icon: 'happy-outline',
+      color: theme.warning.main,
+      screen: 'MoodLog',
+      description: "Record how you're feeling throughout the day",
+    },
+    {
+      id: 'health',
+      title: 'Health Metrics',
+      icon: 'fitness-outline',
+      color: theme.primary.main,
+      screen: 'HealthLog',
+      description: 'Track vital signs, blood pressure, weight, etc.',
+    },
+  ];
+  
+  const handleLogItemPress = (screen) => {
     navigation.navigate(screen);
   };
   
-  // Log card component
-  const LogCard = ({ title, icon, description, screen, color, disabled = false }) => (
-    <TouchableOpacity 
-      style={[
-        styles.card, 
-        { 
-          backgroundColor: disabled ? theme.background.tertiary : theme.background.secondary,
-          opacity: disabled ? 0.7 : 1,
-        }
-      ]}
-      onPress={() => navigateToLog(screen)}
-      disabled={disabled}
-    >
-      <View style={[styles.iconContainer, { backgroundColor: color }]}>
-        <Ionicons name={icon} size={24} color="white" />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={[styles.cardTitle, { color: theme.text.primary }]}>
-          {title}
-        </Text>
-        <Text style={[styles.cardDescription, { color: theme.text.secondary }]}>
-          {description}
-        </Text>
-      </View>
-      <Ionicons 
-        name="chevron-forward" 
-        size={20} 
-        color={disabled ? theme.text.tertiary : theme.text.secondary} 
-      />
-    </TouchableOpacity>
-  );
+  const renderLogItem = (item) => {
+    return (
+      <TouchableOpacity
+        key={item.id}
+        style={[styles.logItem, { backgroundColor: theme.background.secondary }]}
+        onPress={() => handleLogItemPress(item.screen)}
+      >
+        <View style={[styles.iconContainer, { backgroundColor: `${item.color}20` }]}>
+          <Ionicons name={item.icon} size={24} color={item.color} />
+        </View>
+        <View style={styles.logItemContent}>
+          <Text style={[styles.logItemTitle, { color: theme.text.primary }]}>
+            {item.title}
+          </Text>
+          <Text style={[styles.logItemDescription, { color: theme.text.secondary }]}>
+            {item.description}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={theme.text.tertiary} />
+      </TouchableOpacity>
+    );
+  };
   
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: theme.background.primary }]}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={[styles.header, { color: theme.text.primary }]}>
-        Log Your Health Data
-      </Text>
-      <Text style={[styles.subheader, { color: theme.text.secondary }]}>
-        Choose what you want to track today
-      </Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
       
-      {/* Regular Logging Options */}
-      <View style={styles.section}>
-        <LogCard 
-          title="Food & Nutrition" 
-          icon="restaurant-outline" 
-          description="Log meals, snacks and track calories"
-          screen="FoodLog"
-          color={theme.success.main}
-        />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.headerContainer}>
+          <Text style={[styles.headerTitle, { color: theme.text.primary }]}>
+            What would you like to log?
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.text.secondary }]}>
+            Keep track of your daily health activities
+          </Text>
+        </View>
         
-        <LogCard 
-          title="Exercise & Activity" 
-          icon="fitness-outline" 
-          description="Record workouts and physical activities"
-          screen="ExerciseLog"
-          color={theme.secondary.main}
-        />
+        <View style={styles.logItemsContainer}>
+          {logItems.map(renderLogItem)}
+        </View>
         
-        <LogCard 
-          title="Sleep" 
-          icon="bed-outline" 
-          description="Track sleep duration and quality"
-          screen="SleepLog"
-          color={theme.info.main}
-        />
-        
-        <LogCard 
-          title="Mood" 
-          icon="happy-outline" 
-          description="Record your emotional wellbeing"
-          screen="MoodLog"
-          color={theme.warning.main}
-        />
-        
-        <LogCard 
-          title="Water Intake" 
-          icon="water-outline" 
-          description="Track your hydration"
-          screen="WaterLog"
-          color={theme.info.light}
-        />
-        
-        <LogCard 
-          title="Health Metrics" 
-          icon="pulse-outline" 
-          description="Record weight, blood pressure, etc."
-          screen="HealthLog"
-          color={theme.error.main}
-        />
-      </View>
-      
-      {/* Advanced Input Options */}
-      <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
-        Advanced Input Methods
-      </Text>
-      
-      <View style={styles.advancedSection}>
-        {/* Barcode Scanner */}
-        <TouchableOpacity 
-          style={[
-            styles.advancedCard, 
-            { 
-              backgroundColor: FEATURES.BARCODE_SCANNING 
-                ? theme.background.accent 
-                : theme.background.tertiary,
-              opacity: FEATURES.BARCODE_SCANNING ? 1 : 0.7,
-            }
-          ]}
-          onPress={() => navigateToLog('ScanBarcode')}
-          disabled={!FEATURES.BARCODE_SCANNING}
-        >
-          <View style={styles.advancedCardContent}>
-            <Ionicons 
-              name="barcode-outline" 
-              size={32} 
-              color={FEATURES.BARCODE_SCANNING ? theme.primary.main : theme.text.tertiary} 
-            />
-            <View style={styles.advancedTextContainer}>
-              <Text style={[styles.advancedTitle, { color: theme.text.primary }]}>
-                Scan Food Barcode
+        <View style={styles.additionalOptions}>
+          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
+            Additional Options
+          </Text>
+          
+          <View style={styles.optionsRow}>
+            <TouchableOpacity
+              style={[styles.optionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="scan-outline" size={24} color={theme.primary.main} />
+              <Text style={[styles.optionButtonText, { color: theme.text.primary }]}>
+                Scan Barcode
               </Text>
-              <Text style={[styles.advancedDescription, { color: theme.text.secondary }]}>
-                Quickly log food by scanning package barcodes
-              </Text>
-            </View>
-          </View>
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={FEATURES.BARCODE_SCANNING ? theme.text.secondary : theme.text.tertiary} 
-          />
-        </TouchableOpacity>
-        
-        {/* Voice Input */}
-        <TouchableOpacity 
-          style={[
-            styles.advancedCard, 
-            { 
-              backgroundColor: FEATURES.VOICE_INPUT 
-                ? theme.background.accent 
-                : theme.background.tertiary,
-              opacity: FEATURES.VOICE_INPUT ? 1 : 0.7,
-            }
-          ]}
-          onPress={() => navigateToLog('VoiceInput')}
-          disabled={!FEATURES.VOICE_INPUT}
-        >
-          <View style={styles.advancedCardContent}>
-            <Ionicons 
-              name="mic-outline" 
-              size={32} 
-              color={FEATURES.VOICE_INPUT ? theme.primary.main : theme.text.tertiary} 
-            />
-            <View style={styles.advancedTextContainer}>
-              <Text style={[styles.advancedTitle, { color: theme.text.primary }]}>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.optionButton, { backgroundColor: theme.background.secondary }]}
+            >
+              <Ionicons name="mic-outline" size={24} color={theme.primary.main} />
+              <Text style={[styles.optionButtonText, { color: theme.text.primary }]}>
                 Voice Input
               </Text>
-              <Text style={[styles.advancedDescription, { color: theme.text.secondary }]}>
-                Describe your meals, workouts, or sleep with voice
-              </Text>
-            </View>
+            </TouchableOpacity>
           </View>
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={FEATURES.VOICE_INPUT ? theme.text.secondary : theme.text.tertiary} 
-          />
-        </TouchableOpacity>
+        </View>
         
-        {/* Import from Wearable */}
-        <TouchableOpacity 
-          style={[
-            styles.advancedCard, 
-            { 
-              backgroundColor: FEATURES.WEARABLE_SYNC 
-                ? theme.background.accent 
-                : theme.background.tertiary,
-              opacity: FEATURES.WEARABLE_SYNC ? 1 : 0.7,
-            }
-          ]}
-          disabled={!FEATURES.WEARABLE_SYNC}
-        >
-          <View style={styles.advancedCardContent}>
-            <Ionicons 
-              name="watch-outline" 
-              size={32} 
-              color={FEATURES.WEARABLE_SYNC ? theme.primary.main : theme.text.tertiary} 
-            />
-            <View style={styles.advancedTextContainer}>
-              <Text style={[styles.advancedTitle, { color: theme.text.primary }]}>
-                Import from Wearable
+        <View style={styles.reminderContainer}>
+          <View style={[styles.reminderCard, { backgroundColor: theme.background.highlight }]}>
+            <Ionicons name="time-outline" size={24} color={theme.primary.main} />
+            <View style={styles.reminderContent}>
+              <Text style={[styles.reminderTitle, { color: theme.text.primary }]}>
+                Set Reminders
               </Text>
-              <Text style={[styles.advancedDescription, { color: theme.text.secondary }]}>
-                Sync data from your fitness tracker (Coming Soon)
+              <Text style={[styles.reminderDescription, { color: theme.text.secondary }]}>
+                Don't forget to log your health data regularly
               </Text>
-              {!FEATURES.WEARABLE_SYNC && (
-                <View style={[styles.comingSoonBadge, { backgroundColor: theme.primary.light }]}>
-                  <Text style={[styles.comingSoonText, { color: theme.primary.contrast }]}>
-                    Coming Soon
-                  </Text>
-                </View>
-              )}
             </View>
+            <TouchableOpacity
+              style={[styles.reminderButton, { backgroundColor: theme.primary.main }]}
+            >
+              <Text style={styles.reminderButtonText}>Set Up</Text>
+            </TouchableOpacity>
           </View>
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={FEATURES.WEARABLE_SYNC ? theme.text.secondary : theme.text.tertiary} 
-          />
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -243,90 +166,102 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  contentContainer: {
-    padding: SPACING.LARGE,
-    paddingBottom: SPACING.XXLARGE,
+  scrollContainer: {
+    padding: 20,
   },
-  header: {
-    fontSize: FONT_SIZES.TITLE,
+  headerContainer: {
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: SPACING.TINY,
+    marginBottom: 8,
   },
-  subheader: {
-    fontSize: FONT_SIZES.MEDIUM,
-    marginBottom: SPACING.LARGE,
+  headerSubtitle: {
+    fontSize: 16,
   },
-  section: {
-    marginBottom: SPACING.LARGE,
+  logItemsContainer: {
+    marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: FONT_SIZES.LARGE,
-    fontWeight: 'bold',
-    marginBottom: SPACING.MEDIUM,
-  },
-  card: {
+  logItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.MEDIUM,
-    borderRadius: SPACING.MEDIUM,
-    marginBottom: SPACING.MEDIUM,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SPACING.MEDIUM,
+    marginRight: 16,
   },
-  cardContent: {
+  logItemContent: {
     flex: 1,
   },
-  cardTitle: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
-    marginBottom: 2,
+  logItemTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  cardDescription: {
-    fontSize: FONT_SIZES.SMALL,
+  logItemDescription: {
+    fontSize: 14,
   },
-  advancedSection: {
-    marginBottom: SPACING.LARGE,
+  additionalOptions: {
+    marginBottom: 24,
   },
-  advancedCard: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  optionButton: {
+    width: '48%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  optionButtonText: {
+    fontSize: 14,
+    marginTop: 8,
+  },
+  reminderContainer: {
+    marginBottom: 20,
+  },
+  reminderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: SPACING.MEDIUM,
-    borderRadius: SPACING.MEDIUM,
-    marginBottom: SPACING.MEDIUM,
+    padding: 16,
+    borderRadius: 12,
   },
-  advancedCardContent: {
+  reminderContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginLeft: 16,
   },
-  advancedTextContainer: {
-    flex: 1,
-    marginLeft: SPACING.MEDIUM,
+  reminderTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  advancedTitle: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
-    marginBottom: 2,
+  reminderDescription: {
+    fontSize: 14,
   },
-  advancedDescription: {
-    fontSize: FONT_SIZES.SMALL,
+  reminderButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  comingSoonBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: SPACING.SMALL,
-    paddingVertical: 2,
-    borderRadius: SPACING.SMALL,
-    marginTop: SPACING.TINY,
-  },
-  comingSoonText: {
-    fontSize: FONT_SIZES.TINY,
-    fontWeight: 'bold',
+  reminderButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

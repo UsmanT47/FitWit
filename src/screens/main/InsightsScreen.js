@@ -3,207 +3,156 @@ import {
   View, 
   Text, 
   StyleSheet, 
+  SafeAreaView, 
   ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  RefreshControl
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator 
 } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
-import { SPACING, FONT_SIZES } from '../../constants/dimensions';
-import { formatDate, formatRelativeTime } from '../../utils/dateUtils';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 import { getAllInsights, generateNewInsight } from '../../services/aiService';
 
 const InsightsScreen = () => {
   const { theme } = useTheme();
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [loadingNew, setLoadingNew] = useState(false);
   const [insights, setInsights] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [generatingNewInsight, setGeneratingNewInsight] = useState(false);
   
-  // Load insights on mount
   useEffect(() => {
     loadInsights();
   }, []);
   
-  // Load user insights
   const loadInsights = async () => {
     try {
-      setIsLoading(true);
-      const data = await getAllInsights();
-      setInsights(data);
+      setLoading(true);
+      const insightData = await getAllInsights();
+      setInsights(insightData);
     } catch (error) {
       console.error('Error loading insights:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
   
-  // Handle pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadInsights();
-    setRefreshing(false);
-  };
-  
-  // Generate a new insight
-  const handleGenerateInsight = async () => {
     try {
-      setLoadingNew(true);
-      const newInsight = await generateNewInsight();
-      setInsights([newInsight, ...insights]);
-    } catch (error) {
-      console.error('Error generating insight:', error);
+      await loadInsights();
     } finally {
-      setLoadingNew(false);
+      setRefreshing(false);
     }
   };
   
-  // Get insight icon based on type
+  const handleGenerateNewInsight = async () => {
+    try {
+      setGeneratingNewInsight(true);
+      const newInsight = await generateNewInsight();
+      setInsights(prevInsights => [newInsight, ...prevInsights]);
+    } catch (error) {
+      console.error('Error generating new insight:', error);
+    } finally {
+      setGeneratingNewInsight(false);
+    }
+  };
+  
   const getInsightIcon = (type) => {
-    switch (type) {
+    switch(type) {
       case 'sleep':
-        return 'bed';
+        return <Ionicons name="moon" size={24} color={theme.secondary.main} />;
       case 'nutrition':
-        return 'restaurant';
+        return <Ionicons name="nutrition" size={24} color={theme.error.main} />;
       case 'exercise':
-        return 'fitness';
-      case 'mood':
-        return 'happy';
+        return <Ionicons name="barbell" size={24} color={theme.success.main} />;
       case 'hydration':
-        return 'water';
-      case 'general':
+        return <Ionicons name="water" size={24} color={theme.info.main} />;
+      case 'mood':
+        return <Ionicons name="happy" size={24} color={theme.warning.main} />;
       default:
-        return 'bulb';
+        return <Ionicons name="bulb" size={24} color={theme.primary.main} />;
     }
   };
   
-  // Get insight color based on type
-  const getInsightColor = (type) => {
-    switch (type) {
-      case 'sleep':
-        return theme.info.main;
-      case 'nutrition':
-        return theme.success.main;
-      case 'exercise':
-        return theme.secondary.main;
-      case 'mood':
-        return theme.warning.main;
-      case 'hydration':
-        return theme.info.light;
-      case 'general':
-      default:
-        return theme.primary.main;
-    }
+  const renderInsightCard = (insight) => {
+    return (
+      <View
+        key={insight.id}
+        style={[styles.insightCard, { backgroundColor: theme.background.secondary }]}
+      >
+        <View style={styles.insightHeader}>
+          {getInsightIcon(insight.type)}
+          <View style={styles.insightTitleContainer}>
+            <Text style={[styles.insightTitle, { color: theme.text.primary }]}>
+              {insight.title}
+            </Text>
+            <Text style={[styles.insightDate, { color: theme.text.tertiary }]}>
+              {new Date(insight.createdAt).toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+        <Text style={[styles.insightContent, { color: theme.text.secondary }]}>
+          {insight.content}
+        </Text>
+      </View>
+    );
   };
   
   return (
-    <View style={[styles.container, { backgroundColor: theme.background.primary }]}>
-      {/* Header with Generate Button */}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background.primary }]}>
+      <StatusBar style={theme.isDarkMode ? 'light' : 'dark'} />
+      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.text.primary }]}>
-          Your Health Insights
-        </Text>
-        <TouchableOpacity 
+        <Text style={[styles.headerTitle, { color: theme.text.primary }]}>Health Insights</Text>
+        <TouchableOpacity
           style={[
-            styles.generateButton, 
-            { 
-              backgroundColor: loadingNew 
-                ? theme.background.secondary 
-                : theme.primary.main 
-            }
+            styles.newInsightButton, 
+            { backgroundColor: theme.primary.main },
+            generatingNewInsight && { opacity: 0.7 }
           ]}
-          onPress={handleGenerateInsight}
-          disabled={loadingNew}
+          onPress={handleGenerateNewInsight}
+          disabled={generatingNewInsight}
         >
-          {loadingNew ? (
-            <ActivityIndicator size="small" color={theme.primary.main} />
+          {generatingNewInsight ? (
+            <ActivityIndicator size="small" color="#FFF" />
           ) : (
             <>
-              <Ionicons name="add" size={16} color={theme.primary.contrast} />
-              <Text style={[styles.generateText, { color: theme.primary.contrast }]}>
-                New Insight
-              </Text>
+              <Ionicons name="bulb-outline" size={16} color="#FFF" />
+              <Text style={styles.newInsightText}>New Insight</Text>
             </>
           )}
         </TouchableOpacity>
       </View>
       
-      {/* Insights List */}
       <ScrollView
-        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainer}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[theme.primary.main]}
-            tintColor={theme.primary.main}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {isLoading ? (
+        {loading && !refreshing ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.primary.main} />
+            <Text style={[styles.loadingText, { color: theme.text.secondary }]}>
+              Loading insights...
+            </Text>
           </View>
         ) : insights.length > 0 ? (
-          insights.map((insight, index) => (
-            <View 
-              key={insight.id || index}
-              style={[
-                styles.insightCard,
-                { backgroundColor: theme.background.secondary }
-              ]}
-            >
-              <View style={styles.insightHeader}>
-                <View 
-                  style={[
-                    styles.iconContainer, 
-                    { backgroundColor: getInsightColor(insight.type) }
-                  ]}
-                >
-                  <Ionicons 
-                    name={getInsightIcon(insight.type)} 
-                    size={20} 
-                    color={theme.background.primary} 
-                  />
-                </View>
-                <View style={styles.insightMeta}>
-                  <Text style={[styles.insightTitle, { color: theme.text.primary }]}>
-                    {insight.title}
-                  </Text>
-                  <Text style={[styles.insightDate, { color: theme.text.tertiary }]}>
-                    {formatRelativeTime(insight.createdAt)}
-                  </Text>
-                </View>
-              </View>
-              <Text style={[styles.insightContent, { color: theme.text.secondary }]}>
-                {insight.content}
-              </Text>
-            </View>
-          ))
+          insights.map(renderInsightCard)
         ) : (
           <View style={styles.emptyContainer}>
-            <Ionicons 
-              name="analytics-outline" 
-              size={60} 
-              color={theme.text.tertiary} 
-            />
-            <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
-              No insights available yet. Log your health data consistently to receive personalized insights.
+            <Ionicons name="analytics-outline" size={64} color={theme.text.tertiary} />
+            <Text style={[styles.emptyTitle, { color: theme.text.primary }]}>
+              No Insights Yet
             </Text>
-            <TouchableOpacity 
-              style={[styles.refreshButton, { backgroundColor: theme.primary.main }]}
-              onPress={handleGenerateInsight}
-            >
-              <Text style={[styles.refreshText, { color: theme.primary.contrast }]}>
-                Generate Insight
-              </Text>
-            </TouchableOpacity>
+            <Text style={[styles.emptyMessage, { color: theme.text.secondary }]}>
+              Start logging your health data to receive personalized insights about your well-being.
+            </Text>
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -215,90 +164,81 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: SPACING.LARGE,
-    paddingTop: SPACING.LARGE,
-    paddingBottom: SPACING.MEDIUM,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  title: {
-    fontSize: FONT_SIZES.XLARGE,
+  headerTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
   },
-  generateButton: {
+  newInsightButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: SPACING.MEDIUM,
-    paddingVertical: SPACING.SMALL,
-    borderRadius: SPACING.MEDIUM,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  generateText: {
-    fontSize: FONT_SIZES.SMALL,
+  newInsightText: {
+    color: '#FFF',
+    marginLeft: 6,
+    fontSize: 14,
     fontWeight: '500',
-    marginLeft: SPACING.TINY,
   },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: SPACING.LARGE,
+  scrollContainer: {
+    padding: 20,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 300,
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
   },
   insightCard: {
-    borderRadius: SPACING.MEDIUM,
-    padding: SPACING.MEDIUM,
-    marginBottom: SPACING.MEDIUM,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
   },
   insightHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.MEDIUM,
+    marginBottom: 12,
   },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  insightMeta: {
+  insightTitleContainer: {
     flex: 1,
-    marginLeft: SPACING.MEDIUM,
+    marginLeft: 12,
   },
   insightTitle: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
   },
   insightDate: {
-    fontSize: FONT_SIZES.SMALL,
-    marginTop: 2,
+    fontSize: 12,
   },
   insightContent: {
-    fontSize: FONT_SIZES.MEDIUM,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: SPACING.XLARGE,
-    minHeight: 400,
+    paddingVertical: 60,
   },
-  emptyText: {
-    fontSize: FONT_SIZES.MEDIUM,
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
     textAlign: 'center',
-    marginTop: SPACING.LARGE,
-    marginBottom: SPACING.LARGE,
-  },
-  refreshButton: {
-    paddingHorizontal: SPACING.LARGE,
-    paddingVertical: SPACING.MEDIUM,
-    borderRadius: SPACING.SMALL,
-  },
-  refreshText: {
-    fontSize: FONT_SIZES.MEDIUM,
-    fontWeight: '500',
+    paddingHorizontal: 40,
+    lineHeight: 20,
   },
 });
 
